@@ -32,24 +32,24 @@ function set_globals() {
 
   #================== KLIPPER ===================#
   KLIPPY_ENV="${HOME}/klippy-env"
-  KLIPPER_DIR="${HOME}/gelios-klipper"
-  KLIPPER_REPO="https://github.com/UselessJoy/gelios-klipper.git"
+  KLIPPER_DIR="${HOME}/klipper"
+  KLIPPER_REPO="https://github.com/UselessJoy/klipper.git"
 
   #================= MOONRAKER ==================#
   MOONRAKER_ENV="${HOME}/moonraker-env"
-  MOONRAKER_DIR="${HOME}/gelios-moonraker"
-  MOONRAKER_REPO="https://github.com/UselessJoy/gelios-moonraker.git"
+  MOONRAKER_DIR="${HOME}/moonraker"
+  MOONRAKER_REPO="https://github.com/UselessJoy/moonraker.git"
 
   #================= MAINSAIL ===================#
   MAINSAIL_DIR="${HOME}/mainsail"
 
   #================== FLUIDD ====================#
-  FLUIDD_DIR="${HOME}/gelios-fluidd"
+  FLUIDD_DIR="${HOME}/fluidd"
 
   #=============== KLIPPERSCREEN ================#
   KLIPPERSCREEN_ENV="${HOME}/.KlipperScreen-env"
-  KLIPPERSCREEN_DIR="${HOME}/gelios-KlipperScreen"
-  KLIPPERSCREEN_REPO="https://github.com/UselessJoy/gelios-KlipperScreen.git"
+  KLIPPERSCREEN_DIR="${HOME}/KlipperScreen"
+  KLIPPERSCREEN_REPO="https://github.com/UselessJoy/KlipperScreen.git"
 
   #========== MOONRAKER-TELEGRAM-BOT ============#
   TELEGRAM_BOT_ENV="${HOME}/moonraker-telegram-bot-env"
