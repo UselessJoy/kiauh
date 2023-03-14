@@ -68,9 +68,9 @@ function kiauh_update_dialog() {
   top_border
   echo -e "|${green}              New KIAUH update available!                                        ${white}|"
   hr
-  echo -e "|${green}  View Changelog: https://github.com/UselessJoy/gelios-kiauh.git                 ${white}|"
+  echo -e "|${green}  View Changelog: https://github.com/UselessJoy/kiauh.git                 ${white}|"
   blank_line
-  echo -e "|${yellow}  It is recommended to keep GELIOS-KIAUH up to date. Updates                           ${white}|"
+  echo -e "|${yellow}  It is recommended to keep KIAUH up to date. Updates                           ${white}|"
   echo -e "|${yellow}  usually contain bugfixes, important changes or new                            ${white}|"
   echo -e "|${yellow}  features. Please consider updating!                                           ${white}|"
   bottom_border
