@@ -338,11 +338,11 @@ function get_fluidd_download_url() {
 
   ### latest download url including pre-releases (alpha, beta, rc)
   latest_tag=$(echo "${tags}" | head -1)
-  latest_url="https://github.com/UselessJoy/fluidd/releases/download/v0.1/fluidd.zip"
+  latest_url="https://github.com/UselessJoy/fluidd/releases/download/${latest_tag}/fluidd.zip"
 
   ### get stable fluidd download url
   stable_tag=$(echo "${tags}" | grep -E "^v([0-9]+\.?)" | head -1)
-  stable_url="https://github.com/UselessJoy/fluidd/releases/download/v0.1/fluidd.zip"
+  stable_url="https://github.com/UselessJoy/fluidd/releases/download/${stable_tag}/fluidd.zip"
 
   read_kiauh_ini "${FUNCNAME[0]}"
   if [[ ${fluidd_install_unstable} == "true" ]]; then
