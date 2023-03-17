@@ -384,19 +384,19 @@ function write_example_printer_cfg() {
 }
 #===      NEW      ===#
 function install_AP_packages() {
-  if [[ ! $(find_hostapd_service) ]]; then
+  if [[ ! service_exists hostapd ]]; then
     echo "install hostapd service"
     install_service hostapd
   fi
   make_config "hostapd"
   echo "loaded hostapd config"
-  if [[ ! $(find_dnsmasq_service) ]]; then
+  if [[ ! service_exists dnsmasq ]]; then
     echo "install dnsmasq service"
     install_service dnsmasq
   fi
   make_config "dnsmasq"
   echo "loaded dnsmasq config"
-  if [[ ! $(find_network_interfaces) ]]; then
+  if [[ $(find_network_interfaces) ]]; then
     create_network_interfaces
     echo "loaded network interfaces"
   fi
@@ -404,7 +404,7 @@ function install_AP_packages() {
 }
 
 function install_service() {
-  sudo apt-get install $1.service
+  sudo apt-get install $1
   delete_config $1.conf
 }
 
@@ -425,6 +425,14 @@ function create_network_interfaces() {
   sudo cp "${KIAUH_SRCDIR}/resources/interfaces.new" "/etc/network/interfaces.new"
 }
 
+service_exists() {
+    local n=$1
+    if [[ $(systemctl list-units --all -t service --full --no-legend "$n.service" | sed 's/^\s*//g' | cut -f1 -d' ') == $n.service ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
 #===    END NEW    ===#
 #================================================#
 #================ REMOVE KLIPPER ================#
