@@ -402,9 +402,9 @@ function install_AP_packages() {
   ok_msg "Installation AP packages was successfull"
 }
 
-function add_systemd_service()
+function add_systemd_service() {
   sudo cp "${KIAUH_SRCDIR}/resources/$1.service" "/etc/systemd/system"
-  
+}
 function install_service() {
   sudo apt-get install $1
   delete_config $1
