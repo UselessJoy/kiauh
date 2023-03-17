@@ -349,16 +349,6 @@ function find_klipper_systemd() {
   services=$(find "${SYSTEMD}" -maxdepth 1 -regextype posix-extended -regex "${SYSTEMD}/klipper(-[0-9a-zA-Z]+)?.service" | sort)
   echo "${services}"
 }
-#===      NEW      ===#
-function find_network_interfaces() {
-  local interfaces
-  if find /etc/network/interfaces "interfaces.*"; then
-    return 1
-  else
-    return 0
-  fi
-}
-#===    END NEW    ===#
 
 function create_required_folders() {
   local printer_data=${1} folders
