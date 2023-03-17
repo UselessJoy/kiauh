@@ -414,9 +414,9 @@ function delete_config() {
 
 function make_config() {
   if $1 == "dnsmasq"; then
-    cp /resources/$1.conf /etc/$1.d/$1.conf
+    cp ${KIAUH_SRCDIR}/resources/$1.conf /etc/$1.d/$1.conf
   else
-    cp /resources/$1.conf /etc/$1/$1.conf
+    cp ${KIAUH_SRCDIR}/resources/$1.conf /etc/$1/$1.conf
   fi
 }
 
