@@ -403,7 +403,10 @@ function install_AP_packages() {
 }
 
 function add_systemd_service() {
+  status_msg "Creating Wifi-mode service ..."
   sudo cp "${KIAUH_SRCDIR}/resources/$1.service" "/etc/systemd/system"
+  sudo sed -i "s|%USER%|${USER}|" "${SYSTEMD}/$1.service"
+  ok_msg "Wifi-mode service created!"
 }
 function install_service() {
   sudo apt-get install $1

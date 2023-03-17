@@ -2,6 +2,7 @@
 Description=This unit need to change wifi in AP and default mode
 
 [Service]
+User=%USER%
 ExecStart=/home/%USER%/klipper/scripts/changemode.sh
 Type=oneshot
 
