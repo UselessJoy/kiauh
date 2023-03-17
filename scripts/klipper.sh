@@ -404,8 +404,8 @@ function install_AP_packages() {
 }
 
 function install_service() {
-  sudo apt-get install "$1".service
-  delete_config $1.conf
+  sudo apt-get install "${1}".service
+  delete_config "${1}".conf
 }
 
 function delete_config() {
@@ -413,16 +413,16 @@ function delete_config() {
 }
 
 function make_config() {
-  if "$1" == "dnsmasq"; then
-    cp ${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1.d/$1.conf
+  if "${1}" == "dnsmasq"; then
+    cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1.d/$1.conf"
   else
-    cp ${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1/$1.conf
+    cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1/$1.conf"
   fi
 }
 
 function create_network_interfaces() {
-  cp /etc/network/interfaces /etc/network/interfaces.default
-  cp /resources/interfaces.new /etc/network/interfaces.new
+  cp "/etc/network/interfaces" "/etc/network/interfaces.default"
+  cp "${KIAUH_SRCDIR}/resources/interfaces.new" "/etc/network/interfaces.new"
 }
 
 #===    END NEW    ===#
