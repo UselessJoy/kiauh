@@ -384,19 +384,19 @@ function write_example_printer_cfg() {
 }
 #===      NEW      ===#
 function install_AP_packages() {
-  if -z $(find_hostapd_systemd); then
+  if [-z $(find_hostapd_service)]; then
     status_msg "install hostapd service"
     install_service "hostapd"
   fi
   make_config "hostapd"
   status_msg "loaded hostapd config"
-  if -z $(find_dnsmasq_systemd); then
+  if [-z $(find_dnsmasq_service)]; then
     status_msg "install dnsmasq service"
     install_service "dnsmasq"
   fi
   make_config "dnsmasq"
   status_msg "loaded dnsmasq config"
-  if -z $(find_network_interfaces); then
+  if [-z $(find_network_interfaces)]; then
     create_network_interfaces
     status_msg "loaded network interfaces"
   fi
@@ -416,9 +416,9 @@ function make_config() {
   local config_file
   config_file = $1 + ".conf"
   if $1 == "dnsmasq"; then
-    cp $config_file /etc/$1.d/$1.conf
+    cp config_file /etc/$1.d/$1.conf
   else
-    cp $config_file /etc/$1/$1.conf
+    cp config_file /etc/$1/$1.conf
   fi
 }
 

@@ -350,19 +350,19 @@ function find_klipper_systemd() {
   echo "${services}"
 }
 #===      NEW      ===#
-function find_hostapd_services() {
+function find_hostapd_service() {
   local service
   service=$(find "${SYSTEMD}" -maxdepth 1 -regextype posix-extended -regex "${SYSTEMD}/hostapd.service")
   echo "${service}"
 }
 
-function find_dnsmasq_services() {
+function find_dnsmasq_service() {
   local service
   service=$(find "${SYSTEMD}" -maxdepth 1 -regextype posix-extended -regex "${SYSTEMD}/dnsmasq.service")
   echo "${service}"
 }
 
-function find_interfaces() {
+function find_network_interfaces() {
   local interfaces
   interfaces=$(find /etc/network/interfaces "interfaces.*")
   echo "${interfaces}"
