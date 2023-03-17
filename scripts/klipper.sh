@@ -384,13 +384,13 @@ function write_example_printer_cfg() {
 }
 #===      NEW      ===#
 function install_AP_packages() {
-  if [[ ! service_exists hostapd ]]; then
+  if ! service_exists hostapd; then
     echo "install hostapd service"
     install_service hostapd
   fi
   make_config "hostapd"
   echo "loaded hostapd config"
-  if [[ ! service_exists dnsmasq ]]; then
+  if ! service_exists dnsmasq; then
     echo "install dnsmasq service"
     install_service dnsmasq
   fi
