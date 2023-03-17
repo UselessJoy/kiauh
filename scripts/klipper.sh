@@ -405,7 +405,7 @@ function install_AP_packages() {
 
 function install_service() {
   sudo apt-get install $1
-  delete_config $1.conf
+  delete_config $1
 }
 
 function delete_config() {
