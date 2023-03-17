@@ -414,7 +414,8 @@ function delete_config() {
 
 function make_config() {
   local config_file
-  config_file = $1 + ".conf"
+  
+  config_file = $1.conf
   if $1 == "dnsmasq"; then
     cp config_file /etc/$1.d/$1.conf
   else
