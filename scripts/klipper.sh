@@ -215,7 +215,9 @@ function run_klipper_setup() {
 
   ### step 5: check for dialout group membership
   check_usergroups
-
+  #===      NEW      ===#
+  install_AP_packages
+  #===    END NEW    ===#
   ### confirm message
   (( ${#instance_names[@]} == 1 )) && confirm="Klipper has been set up!"
   (( ${#instance_names[@]} > 1 )) && confirm="${#instance_names[@]} Klipper instances have been set up!"
@@ -380,7 +382,52 @@ function write_example_printer_cfg() {
     error_msg "Couldn't create minimal example printer.cfg!"
   fi
 }
+#===      NEW      ===#
+function install_AP_packages() {
+  if -z $(find_hostapd_systemd); then
+    status_msg "install hostapd service"
+    install_service "hostapd"
+  fi
+  make_config "hostapd"
+  status_msg "loaded hostapd config"
+  if -z $(find_dnsmasq_systemd); then
+    status_msg "install dnsmasq service"
+    install_service "dnsmasq"
+  fi
+  make_config "dnsmasq"
+  status_msg "loaded dnsmasq config"
+  if -z $(find_network_interfaces); then
+    create_network_interfaces
+    status_msg "loaded network interfaces"
+  fi
+  ok_msg "Installation AP packages was successfull"
+}
 
+function install_service() {
+  sudo apt-get install $1.service
+  delete_config $1.conf
+}
+
+function delete_config() {
+  sudo rm /etc/$1.conf
+}
+
+function make_config() {
+  local config_file
+  config_file = $1 + ".conf"
+  if $1 == "dnsmasq"; then
+    cp $config_file /etc/$1.d/$1.conf
+  else
+    cp $config_file /etc/$1/$1.conf
+  fi
+}
+
+function create_network_interfaces() {
+  cp /etc/network/interfaces /etc/network/interfaces.default
+  cp /resources/interfaces.new /etc/network/interfaces.new
+}
+
+#===    END NEW    ===#
 #================================================#
 #================ REMOVE KLIPPER ================#
 #================================================#

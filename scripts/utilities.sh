@@ -349,6 +349,25 @@ function find_klipper_systemd() {
   services=$(find "${SYSTEMD}" -maxdepth 1 -regextype posix-extended -regex "${SYSTEMD}/klipper(-[0-9a-zA-Z]+)?.service" | sort)
   echo "${services}"
 }
+#===      NEW      ===#
+function find_hostapd_services() {
+  local service
+  service=$(find "${SYSTEMD}" -maxdepth 1 -regextype posix-extended -regex "${SYSTEMD}/hostapd.service")
+  echo "${service}"
+}
+
+function find_dnsmasq_services() {
+  local service
+  service=$(find "${SYSTEMD}" -maxdepth 1 -regextype posix-extended -regex "${SYSTEMD}/dnsmasq.service")
+  echo "${service}"
+}
+
+function find_interfaces() {
+  local interfaces
+  interfaces=$(find /etc/network/interfaces "interfaces.*")
+  echo "${interfaces}"
+}
+#===    END NEW    ===#
 
 function create_required_folders() {
   local printer_data=${1} folders
