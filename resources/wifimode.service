@@ -1,0 +1,9 @@
+[Unit]
+Description=This unit need to change wifi in AP and default mode
+
+[Service]
+ExecStart=/home/orangepi/scripts/changemode.sh
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

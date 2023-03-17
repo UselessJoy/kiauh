@@ -398,9 +398,13 @@ function install_AP_packages() {
   echo "loaded dnsmasq config"
   create_network_interfaces
   echo "loaded network interfaces"
+  add_systemd_service wifimode
   ok_msg "Installation AP packages was successfull"
 }
 
+function add_systemd_service()
+  sudo cp "${KIAUH_SRCDIR}/resources/$1.service" "/etc/systemd/system"
+  
 function install_service() {
   sudo apt-get install $1
   delete_config $1
