@@ -385,22 +385,22 @@ function write_example_printer_cfg() {
 #===      NEW      ===#
 function install_AP_packages() {
   if [-z $(find_hostapd_service)]; then
-    status_msg "install hostapd service"
+    echo "install hostapd service"
     install_service "hostapd"
   fi
   make_config "hostapd"
-  status_msg "loaded hostapd config"
+  echo "loaded hostapd config"
   if [-z $(find_dnsmasq_service)]; then
-    status_msg "install dnsmasq service"
+    echo "install dnsmasq service"
     install_service "dnsmasq"
   fi
   make_config "dnsmasq"
-  status_msg "loaded dnsmasq config"
+  echo "loaded dnsmasq config"
   if [-z $(find_network_interfaces)]; then
     create_network_interfaces
-    status_msg "loaded network interfaces"
+    echo "loaded network interfaces"
   fi
-  ok_msg "Installation AP packages was successfull"
+  echo "Installation AP packages was successfull"
 }
 
 function install_service() {
