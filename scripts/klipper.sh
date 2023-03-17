@@ -186,7 +186,7 @@ function run_klipper_setup() {
   local custom_repo
   local custom_branch
   local dep
-  
+
   #===      NEW      ===#
   install_AP_packages
   #===    END NEW    ===#
@@ -384,19 +384,19 @@ function write_example_printer_cfg() {
 }
 #===      NEW      ===#
 function install_AP_packages() {
-  if [[-z $(find_hostapd_service)]]; then
+  if [[! $(find_hostapd_service)]]; then
     echo "install hostapd service"
     install_service "hostapd"
   fi
   make_config "hostapd"
   echo "loaded hostapd config"
-  if [[-z $(find_dnsmasq_service)]]; then
+  if [[! $(find_dnsmasq_service)]]; then
     echo "install dnsmasq service"
     install_service "dnsmasq"
   fi
   make_config "dnsmasq"
   echo "loaded dnsmasq config"
-  if [[-z $(find_network_interfaces)]]; then
+  if [[! $(find_network_interfaces)]]; then
     create_network_interfaces
     echo "loaded network interfaces"
   fi
@@ -404,8 +404,8 @@ function install_AP_packages() {
 }
 
 function install_service() {
-  sudo apt-get install "${1}".service
-  delete_config "${1}".conf
+  sudo apt-get install "$1".service
+  delete_config "$1".conf
 }
 
 function delete_config() {
@@ -413,16 +413,16 @@ function delete_config() {
 }
 
 function make_config() {
-  if "${1}" == "dnsmasq"; then
-    cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1.d/$1.conf"
+  if [["$1" == "dnsmasq"]]; then
+    sudo cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1.d/$1.conf"
   else
-    cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1/$1.conf"
+    sudo cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1/$1.conf"
   fi
 }
 
 function create_network_interfaces() {
-  cp "/etc/network/interfaces" "/etc/network/interfaces.default"
-  cp "${KIAUH_SRCDIR}/resources/interfaces.new" "/etc/network/interfaces.new"
+  sudo cp "/etc/network/interfaces" "/etc/network/interfaces.default"
+  sudo cp "${KIAUH_SRCDIR}/resources/interfaces.new" "/etc/network/interfaces.new"
 }
 
 #===    END NEW    ===#
