@@ -384,19 +384,19 @@ function write_example_printer_cfg() {
 }
 #===      NEW      ===#
 function install_AP_packages() {
-  if [[! $(find_hostapd_service)]]; then
+  if [[ ! $(find_hostapd_service) ]]; then
     echo "install hostapd service"
-    install_service "hostapd"
+    install_service hostapd
   fi
   make_config "hostapd"
   echo "loaded hostapd config"
-  if [[! $(find_dnsmasq_service)]]; then
+  if [[ ! $(find_dnsmasq_service) ]]; then
     echo "install dnsmasq service"
-    install_service "dnsmasq"
+    install_service dnsmasq
   fi
   make_config "dnsmasq"
   echo "loaded dnsmasq config"
-  if [[! $(find_network_interfaces)]]; then
+  if [[ ! $(find_network_interfaces) ]]; then
     create_network_interfaces
     echo "loaded network interfaces"
   fi
@@ -404,8 +404,8 @@ function install_AP_packages() {
 }
 
 function install_service() {
-  sudo apt-get install "$1".service
-  delete_config "$1".conf
+  sudo apt-get install $1.service
+  delete_config $1.conf
 }
 
 function delete_config() {
@@ -413,7 +413,7 @@ function delete_config() {
 }
 
 function make_config() {
-  if [["$1" == "dnsmasq"]]; then
+  if [[ $1 == "dnsmasq" ]]; then
     sudo cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1.d/$1.conf"
   else
     sudo cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1/$1.conf"
