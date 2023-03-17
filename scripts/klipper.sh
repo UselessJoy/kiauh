@@ -186,7 +186,10 @@ function run_klipper_setup() {
   local custom_repo
   local custom_branch
   local dep
-
+  
+  #===      NEW      ===#
+  install_AP_packages
+  #===    END NEW    ===#
   shift 1
   read -r -a instance_names <<< "${@}"
 
@@ -215,9 +218,6 @@ function run_klipper_setup() {
 
   ### step 5: check for dialout group membership
   check_usergroups
-  #===      NEW      ===#
-  install_AP_packages
-  #===    END NEW    ===#
   ### confirm message
   (( ${#instance_names[@]} == 1 )) && confirm="Klipper has been set up!"
   (( ${#instance_names[@]} > 1 )) && confirm="${#instance_names[@]} Klipper instances have been set up!"
