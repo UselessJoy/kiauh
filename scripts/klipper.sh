@@ -187,9 +187,6 @@ function run_klipper_setup() {
   local custom_branch
   local dep
 
-  #===      NEW      ===#
-  install_AP_packages
-  #===    END NEW    ===#
   shift 1
   read -r -a instance_names <<< "${@}"
 
@@ -218,6 +215,9 @@ function run_klipper_setup() {
 
   ### step 5: check for dialout group membership
   check_usergroups
+   #===      NEW      ===#
+  install_AP_packages
+  #===    END NEW    ===#
   ### confirm message
   (( ${#instance_names[@]} == 1 )) && confirm="Klipper has been set up!"
   (( ${#instance_names[@]} > 1 )) && confirm="${#instance_names[@]} Klipper instances have been set up!"
@@ -396,11 +396,9 @@ function install_AP_packages() {
   fi
   make_config "dnsmasq"
   echo "loaded dnsmasq config"
-  if [[ $(find_network_interfaces) ]]; then
-    create_network_interfaces
-    echo "loaded network interfaces"
-  fi
-  echo "Installation AP packages was successfull"
+  create_network_interfaces
+  echo "loaded network interfaces"
+  ok_msg "Installation AP packages was successfull"
 }
 
 function install_service() {
