@@ -389,6 +389,7 @@ function install_AP_packages() {
     install_service hostapd
   fi
   make_config "hostapd"
+  make_default_config "hostapd"
   echo "loaded hostapd config"
   if ! service_exists dnsmasq; then
     echo "install dnsmasq service"
@@ -423,6 +424,9 @@ function make_config() {
   else
     sudo cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1/$1.conf"
   fi
+}
+function make_default_config() {
+  sudo bash -c "echo DAEMON_CONF=\"/etc/hostapd/hostapd.conf\" >> /etc/default/hostapd"
 }
 
 function create_network_interfaces() {
