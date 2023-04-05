@@ -333,7 +333,8 @@ function compare_fluidd_versions() {
 
 function get_fluidd_download_url() {
   local fl_tags tags latest_tag latest_url stable_tag stable_url url
-  fl_tags="https://github.com/UselessJoy/fluidd/tags"
+
+  fl_tags="https://api.github.com/repos/UselessJoy/fluidd/tags"
   tags=$(curl -s "${fl_tags}" | grep "name" | cut -d'"' -f4)
 
   ### latest download url including pre-releases (alpha, beta, rc)
