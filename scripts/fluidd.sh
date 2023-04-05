@@ -168,7 +168,7 @@ function download_fluidd() {
 
   mkdir "${FLUIDD_DIR}" && cd "${FLUIDD_DIR}"
 
-  if wget "https://github.com/UselessJoy/fluidd/releases/download/v0.1/fluidd.zip"; then
+  if wget ${url}; then
     ok_msg "Download complete!"
     status_msg "Extracting archive ..."
     unzip -q -o ./*.zip && ok_msg "Done!"
