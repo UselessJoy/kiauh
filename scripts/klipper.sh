@@ -387,6 +387,7 @@ function install_AP_packages() {
   if ! service_exists hostapd; then
     echo "install hostapd service"
     install_service hostapd
+    mask_service hostapd
   fi
   make_config "hostapd"
   make_default_config "hostapd"
@@ -394,6 +395,7 @@ function install_AP_packages() {
   if ! service_exists dnsmasq; then
     echo "install dnsmasq service"
     install_service dnsmasq
+    mask_service dnsmasq
   fi
   make_config "dnsmasq"
   echo "loaded dnsmasq config"
@@ -406,7 +408,6 @@ function install_AP_packages() {
 function add_systemd_service() {
   status_msg "Creating Wifi-mode service ..."
   sudo cp "${KIAUH_SRCDIR}/resources/$1.service" "/etc/systemd/system"
-  sudo sed -i "s|%USER%|${USER}|" "${SYSTEMD}/$1.service"
   ok_msg "Wifi-mode service created!"
 }
 function install_service() {
@@ -414,6 +415,11 @@ function install_service() {
   delete_config $1
 }
 
+function mask_service() {
+  systemctl stop $1
+	systemctl disable $1
+	systemctl mask $1
+}
 function delete_config() {
   sudo rm /etc/$1.conf
 }
