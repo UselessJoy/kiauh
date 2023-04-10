@@ -403,8 +403,19 @@ function install_AP_packages() {
   echo "loaded network interfaces"
   add_systemd_service wifimode
   ok_msg "Installation AP packages was successfull"
+  install_usb_automount
+  ok_msg "Installation usb-automount packages was successfull"
 }
 
+function install_usb_automount() {
+  cd ~
+  git clone https://github.com/Ferk/udev-media-automount/archive/refs/heads/master.zip
+  unzip master.zip
+  cd udev-media-automount-master
+  sudo make install
+  sudo udevadm control --reload-rules
+  sudo udevadm trigger
+}
 function add_systemd_service() {
   status_msg "Creating Wifi-mode service ..."
   sudo cp "${KIAUH_SRCDIR}/resources/$1.service" "/etc/systemd/system"
