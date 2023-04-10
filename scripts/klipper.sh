@@ -415,6 +415,9 @@ function install_usb_automount() {
   sudo make install
   sudo udevadm control --reload-rules
   sudo udevadm trigger
+  cd ~
+  rm -rf udev-media-automount-master
+  rm -rf master.zip
 }
 function add_systemd_service() {
   status_msg "Creating Wifi-mode service ..."
