@@ -409,7 +409,7 @@ function install_AP_packages() {
 
 function install_usb_automount() {
   cd ~
-  git clone https://github.com/Ferk/udev-media-automount/archive/refs/heads/master.zip
+  wget https://github.com/Ferk/udev-media-automount/archive/refs/heads/master.zip
   unzip master.zip
   cd udev-media-automount-master
   sudo make install
