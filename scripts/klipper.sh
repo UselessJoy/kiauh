@@ -395,7 +395,7 @@ function install_AP_packages() {
   if ! service_exists dnsmasq; then
     echo "install dnsmasq service"
     install_service dnsmasq
-    mask_service dnsmasq
+   # mask_service dnsmasq
   fi
   make_config "dnsmasq"
   echo "loaded dnsmasq config"
