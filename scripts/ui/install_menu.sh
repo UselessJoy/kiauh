@@ -68,7 +68,10 @@ function install_menu() {
       10) 
         do_action "install_crowsnest" "install_ui";;
       11)
-        do_action "full_install" "install_ui";;
+        do_action "start_klipper_setup" "install_ui"
+        do_action "moonraker_setup_dialog" "install_ui"
+        do_action "install_fluidd" "install_ui"
+        do_action "install_klipperscreen" "install_ui";;
       B|b)
         clear; main_menu; break;;
       *)
