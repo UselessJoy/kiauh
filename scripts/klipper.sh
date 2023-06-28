@@ -395,7 +395,7 @@ function install_AP_packages() {
   if ! service_exists dnsmasq; then
     echo "install dnsmasq service"
     install_service dnsmasq
-   # mask_service dnsmasq
+    mask_service dnsmasq
   fi
   make_config "dnsmasq"
   echo "loaded dnsmasq config"
@@ -454,9 +454,8 @@ function create_network_interfaces() {
   sudo cp "${KIAUH_SRCDIR}/resources/interfaces.new" "/etc/network/interfaces.new"
 }
 
-service_exists() {
-    local n=$1
-    if [[ $(systemctl list-units --all -t service --full --no-legend "$n.service" | sed 's/^\s*//g' | cut -f1 -d' ') == $n.service ]]; then
+function service_exists() {
+    if [[ $(systemctl list-units --all -t service --full --no-legend "$n.service" | sed 's/^\s*//g' | cut -f1 -d' ') == $1.service ]]; then
         return 0
     else
         return 1
