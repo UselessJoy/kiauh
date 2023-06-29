@@ -22,9 +22,9 @@ set -e
 function necessary_klipper_setup() {
   local klipper_initd_service
   local klipper_systemd_services
-  local python_version = 3
+  local python_version
   local error
-
+  python_version=3
   status_msg "Initializing Klipper installation ...\n"
 
   ### return early if klipper already exists
