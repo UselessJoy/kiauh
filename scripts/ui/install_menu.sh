@@ -71,7 +71,7 @@ function install_menu() {
         do_action "necessary_klipper_setup"
         do_action "moonraker_setup_dialog"
         do_action "install_fluidd"
-        do_action "install_klipperscreen" "general_ui";;
+        do_action "install_klipperscreen" "install_ui";;
       B|b)
         clear; main_menu; break;;
       *)
