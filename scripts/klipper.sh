@@ -48,7 +48,7 @@ function necessary_klipper_setup() {
 
   status_msg "Installing single Klipper instance ..."
 
-  run_klipper_setup "${python_version}" "gelios"
+  run_klipper_setup "${python_version}" "printer"
 }
 
 
