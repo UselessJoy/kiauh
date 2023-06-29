@@ -110,23 +110,23 @@ function moonraker_setup_dialog() {
   user_input+=("${moonraker_count}")
 
   ### confirm instance amount
-  local yn
-  while true; do
-    (( moonraker_count == 1 )) && local question="Install Moonraker?"
-    (( moonraker_count > 1 )) && local question="Install ${moonraker_count} Moonraker instances?"
-    read -p "${cyan}###### ${question} (Y/n):${white} " yn
-    case "${yn}" in
-      Y|y|Yes|yes|"")
-        select_msg "Yes"
-        break;;
-      N|n|No|no)
-        select_msg "No"
-        abort_msg "Exiting Moonraker setup ...\n"
-        return;;
-      *)
-        error_msg "Invalid Input!";;
-    esac
-  done
+  # local yn
+  # while true; do
+  #   (( moonraker_count == 1 )) && local question="Install Moonraker?"
+  #   (( moonraker_count > 1 )) && local question="Install ${moonraker_count} Moonraker instances?"
+  #   read -p "${cyan}###### ${question} (Y/n):${white} " yn
+  #   case "${yn}" in
+  #     Y|y|Yes|yes|"")
+  #       select_msg "Yes"
+  #       break;;
+  #     N|n|No|no)
+  #       select_msg "No"
+  #       abort_msg "Exiting Moonraker setup ...\n"
+  #       return;;
+  #     *)
+  #       error_msg "Invalid Input!";;
+  #   esac
+  # done
 
   ### write existing klipper names into user_input array to use them as names for moonraker
   if (( klipper_count > 1 )); then

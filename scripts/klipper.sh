@@ -19,6 +19,39 @@ set -e
 #================ INSTALL KLIPPER ================#
 #=================================================#
 
+function necessary_klipper_setup() {
+  local klipper_initd_service
+  local klipper_systemd_services
+  local python_version = 3
+  local error
+
+  status_msg "Initializing Klipper installation ...\n"
+
+  ### return early if klipper already exists
+  klipper_initd_service=$(find_klipper_initd)
+  klipper_systemd_services=$(find_klipper_systemd)
+
+  if [[ -n ${klipper_initd_service} ]]; then
+    error="Unsupported Klipper SysVinit service detected:"
+    error="${error}\n ➔ ${klipper_initd_service}"
+    error="${error}\n Please re-install Klipper with KIAUH!"
+    log_info "Unsupported Klipper SysVinit service detected: ${klipper_initd_service}"
+  elif [[ -n ${klipper_systemd_services} ]]; then
+    error="At least one Klipper service is already installed:"
+
+    for s in ${klipper_systemd_services}; do
+      log_info "Found Klipper service: ${s}"
+      error="${error}\n ➔ ${s}"
+    done
+  fi
+  [[ -n ${error} ]] && print_error "${error}" && return
+
+  status_msg "Installing single Klipper instance ..."
+
+  run_klipper_setup "${python_version}" "gelios"
+}
+
+
 function start_klipper_setup() {
   local klipper_initd_service
   local klipper_systemd_services
