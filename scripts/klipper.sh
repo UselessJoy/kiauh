@@ -248,9 +248,6 @@ function run_klipper_setup() {
 
   ### step 5: check for dialout group membership
   check_usergroups
-   #===      NEW      ===#
-  install_AP_packages
-  #===    END NEW    ===#
   ### confirm message
   (( ${#instance_names[@]} == 1 )) && confirm="Klipper has been set up!"
   (( ${#instance_names[@]} > 1 )) && confirm="${#instance_names[@]} Klipper instances have been set up!"
