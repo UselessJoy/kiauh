@@ -415,30 +415,6 @@ function write_example_printer_cfg() {
     error_msg "Couldn't create minimal example printer.cfg!"
   fi
 }
-#===      NEW      ===#
-function install_AP_packages() {
-  if ! service_exists hostapd; then
-    echo "install hostapd service"
-    install_service hostapd
-    mask_service hostapd
-  fi
-  make_config "hostapd"
-  make_default_config "hostapd"
-  echo "loaded hostapd config"
-  if ! service_exists dnsmasq; then
-    echo "install dnsmasq service"
-    install_service dnsmasq
-    mask_service dnsmasq
-  fi
-  make_config "dnsmasq"
-  echo "loaded dnsmasq config"
-  create_network_interfaces
-  echo "loaded network interfaces"
-  add_systemd_service wifimode
-  ok_msg "Installation AP packages was successfull"
-  install_usb_automount
-  ok_msg "Installation usb-automount packages was successfull"
-}
 
 function install_usb_automount() {
   cd ~
@@ -452,48 +428,7 @@ function install_usb_automount() {
   rm -rf udev-media-automount-master
   rm -rf master.zip
 }
-function add_systemd_service() {
-  status_msg "Creating Wifi-mode service ..."
-  sudo cp "${KIAUH_SRCDIR}/resources/$1.service" "/etc/systemd/system"
-  ok_msg "Wifi-mode service created!"
-}
-function install_service() {
-  sudo apt-get install $1
-  delete_config $1
-}
 
-function mask_service() {
-  systemctl stop $1
-	systemctl disable $1
-	systemctl mask $1
-}
-function delete_config() {
-  sudo rm /etc/$1.conf
-}
-
-function make_config() {
-  if [[ $1 == "dnsmasq" ]]; then
-    sudo cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1.d/$1.conf"
-  else
-    sudo cp "${KIAUH_SRCDIR}/resources/$1.conf" "/etc/$1/$1.conf"
-  fi
-}
-function make_default_config() {
-  sudo bash -c "echo DAEMON_CONF=\"/etc/hostapd/hostapd.conf\" >> /etc/default/hostapd"
-}
-
-function create_network_interfaces() {
-  sudo cp "/etc/network/interfaces" "/etc/network/interfaces.default"
-  sudo cp "${KIAUH_SRCDIR}/resources/interfaces.new" "/etc/network/interfaces.new"
-}
-
-function service_exists() {
-    if [[ $(systemctl list-units --all -t service --full --no-legend "$1.service" | sed 's/^\s*//g' | cut -f2 -d' ') == $1.service ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
 #===    END NEW    ===#
 #================================================#
 #================ REMOVE KLIPPER ================#
