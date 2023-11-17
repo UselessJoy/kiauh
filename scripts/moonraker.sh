@@ -426,6 +426,9 @@ function install_moonraker_polkit() {
     status_msg "Installing Moonraker policykit rules ..."
     "${HOME}"/moonraker/scripts/set-policykit-rules.sh
     ok_msg "Moonraker policykit rules installed!"
+    sudo nmcli connection add type wifi ifname wlan0 con-name Gelios autoconnect no ssid Gelios
+    sudo nmcli connection modify Gelios 802-11-wireless.mode ap 802-11-wireless.band bg 802-11-wireless.channel 6 wifi-sec.key-mgmt wpa-psk wifi-sec.psk GeliosPassword
+    ok_msg "added access point connection"
   fi
 
   return
