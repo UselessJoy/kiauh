@@ -103,10 +103,10 @@ function install_gcode_shell_command() {
 
 function create_example_shell_command() {
   ### create a backup of the config folder
-  backup_klipper_config_dir
+  backup_config_dir
 
   local configs regex path
-  regex="\/home\/${USER}\/([A-Za-z0-9_]+)\/config\/printer\.cfg"
+  regex="${HOME//\//\\/}\/([A-Za-z0-9_]+)\/config\/printer\.cfg"
   configs=$(find "${HOME}" -maxdepth 3 -regextype posix-extended -regex "${regex}" | sort)
 
   for cfg in ${configs}; do

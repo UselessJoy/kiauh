@@ -19,22 +19,24 @@ function install_ui() {
   echo -e "|  all necessary dependencies for the various           |"
   echo -e "|  functions on a completely fresh system.              |"
   hr
-  echo -e "| Firmware & API:          | 3rd Party Webinterface:    |"
-  echo -e "|  1) [Klipper]            |  6) [OctoPrint]            |"
-  echo -e "|  2) [Moonraker]          |                            |"
-  echo -e "|                          | Other:                     |"
-  echo -e "| Klipper Webinterface:    |  7) [PrettyGCode]          |"
-  echo -e "|  3) [Mainsail]           |  8) [Telegram Bot]         |"
-  echo -e "|  4) [Fluidd]             |  9) $(obico_install_title) |"
-  echo -e "|                          |                            |"
-  echo -e "| Touchscreen GUI:         | Webcam Streamer:           |"
-  echo -e "|  5) [KlipperScreen]      | 10) [Crowsnest]            |"
-  echo -e "|  11) Full install        |                            |"
+  echo -e "| Firmware & API:            | Webcam Streamer:           |"
+  echo -e "|  1) [Klipper]              |  7) [Crowsnest]            |"
+  echo -e "|  2) [Moonraker]            |                            |"
+  echo -e "|                            | Other:                     |"
+  echo -e "| Klipper Webinterface:      |  8) [PrettyGCode]          |"
+  echo -e "|  3) [Mainsail]             |  9) [Telegram Bot]         |"
+  echo -e "|  4) [Fluidd]               |  10) $(obico_install_title)|"
+  echo -e "|                            |  11) [OctoEverywhere]      |"
+  echo -e "| Touchscreen GUI:           |  12) [Mobileraker]         |"
+  echo -e "|  5) [KlipperScreen]        |  13) [Full Install]        |"
+  echo -e "|                            |                            |"
+  echo -e "| 3rd Party Webinterface:    |                            |"
+  echo -e "|  6) [OctoPrint]            |                            |"
   back_footer
 }
-
 function install_menu() {
-  clear && print_header
+  clear -x && sudo true && clear -x # (re)cache sudo credentials so password prompt doesn't bork ui
+  print_header
   install_ui
 
   ### save all installed webinterface ports to the ini file
@@ -60,14 +62,18 @@ function install_menu() {
       6)
         do_action "octoprint_setup_dialog" "install_ui";;
       7)
-        do_action "install_pgc_for_klipper" "install_ui";;
-      8)
-        do_action "telegram_bot_setup_dialog" "install_ui";;
-      9)
-        do_action "moonraker_obico_setup_dialog" "install_ui";;
-      10) 
         do_action "install_crowsnest" "install_ui";;
-      11)
+      8)
+        do_action "install_pgc_for_klipper" "install_ui";;
+      9)
+        do_action "telegram_bot_setup_dialog" "install_ui";;
+      10)
+        do_action "moonraker_obico_setup_dialog" "install_ui";;
+      11) 
+        do_action "octoeverywhere_setup_dialog" "install_ui";;
+      12)
+        do_action "install_mobileraker" "install_ui";;
+      13)
         do_action "necessary_klipper_setup"
         do_action "moonraker_setup_dialog"
         do_action "install_fluidd"

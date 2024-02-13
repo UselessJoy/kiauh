@@ -51,9 +51,30 @@ function necessary_klipper_setup() {
   run_klipper_setup "${python_version}" "printer"
 }
 
+###
+# this function detects all installed klipper
+# systemd instances and returns their absolute path
+function klipper_systemd() {
+  local services
+  local blacklist
+  local ignore
+  local match
+
+  ###
+  # any service that uses "klipper" in its own name but isn't a full klipper service must be blacklisted using
+  # this variable, otherwise they will be falsely recognized as klipper instances. E.g. "klipper-mcu.service"
+  # is not a klipper service, but related to klippers linux mcu, which also requires its own service file, hence
+  # it must be blacklisted.
+  blacklist="mcu"
+
+  ignore="${SYSTEMD}/klipper-(${blacklist}).service"
+  match="${SYSTEMD}/klipper(-[0-9a-zA-Z]+)?.service"
+
+  services=$(find "${SYSTEMD}" -maxdepth 1 -regextype awk ! -regex "${ignore}" -regex "${match}" | sort)
+  echo "${services}"
+}
 
 function start_klipper_setup() {
-  local klipper_initd_service
   local klipper_systemd_services
   local python_version
   local instance_count
@@ -61,20 +82,15 @@ function start_klipper_setup() {
   local use_custom_names
   local input
   local regex
+  local blacklist
   local error
 
   status_msg "Initializing Klipper installation ...\n"
 
   ### return early if klipper already exists
-  klipper_initd_service=$(find_klipper_initd)
-  klipper_systemd_services=$(find_klipper_systemd)
+  klipper_systemd_services=$(klipper_systemd)
 
-  if [[ -n ${klipper_initd_service} ]]; then
-    error="Unsupported Klipper SysVinit service detected:"
-    error="${error}\n ➔ ${klipper_initd_service}"
-    error="${error}\n Please re-install Klipper with KIAUH!"
-    log_info "Unsupported Klipper SysVinit service detected: ${klipper_initd_service}"
-  elif [[ -n ${klipper_systemd_services} ]]; then
+  if [[ -n ${klipper_systemd_services} ]]; then
     error="At least one Klipper service is already installed:"
 
     for s in ${klipper_systemd_services}; do
@@ -87,7 +103,7 @@ function start_klipper_setup() {
   ### user selection for python version
   print_dialog_user_select_python_version
   while true; do
-    read -p "${cyan}###### Select Python version:${white} " input
+    read -p "${cyan}###### Select Python version:${white} " -i "1" -e input
     case "${input}" in
       1)
         select_msg "Python 3.x\n"
@@ -146,15 +162,19 @@ function start_klipper_setup() {
   fi
 
   ### user selection for setting the actual custom names
+  shopt -s nocasematch
   if (( instance_count > 1 )) && [[ ${use_custom_names} == "true" ]]; then
     local i
 
     i=1
     regex="^[0-9a-zA-Z]+$"
-    while [[ ! ${input} =~ ${regex} || ${i} -le ${instance_count} ]]; do
+    blacklist="mcu"
+    while [[ ! ${input} =~ ${regex} || ${input} =~ ${blacklist} || ${i} -le ${instance_count} ]]; do
       read -p "${cyan}###### Name for instance #${i}:${white} " input
 
-      if [[ ${input} =~ ${regex} ]]; then
+      if [[ ${input} =~ ${blacklist} ]]; then
+        error_msg "Name not allowed! You are trying to use a reserved name."
+      elif [[ ${input} =~ ${regex} && ! ${input} =~ ${blacklist} ]]; then
         select_msg "Name: ${input}\n"
         if [[ ${input} =~ ^[0-9]+$ ]]; then
           instance_names+=("printer_${input}")
@@ -171,6 +191,8 @@ function start_klipper_setup() {
       instance_names+=("printer_${i}")
     done
   fi
+
+  shopt -u nocasematch
 
   (( instance_count > 1 )) && status_msg "Installing ${instance_count} Klipper instances ..."
   (( instance_count == 1 )) && status_msg "Installing single Klipper instance ..."
@@ -254,6 +276,7 @@ function run_klipper_setup() {
 
   ### finalizing the setup with writing instance names to the kiauh.ini
   set_multi_instance_names
+  mask_disrupting_services
 
   print_confirm "${confirm}" && return
 }
@@ -305,7 +328,7 @@ function create_klipper_virtualenv() {
 # @param {string}: python_version - klipper-env python version
 #
 function install_klipper_packages() {
-  local packages python_version="${1}"
+  local packages log_name="Klipper" python_version="${1}"
   local install_script="${KLIPPER_DIR}/scripts/install-debian.sh"
 
   status_msg "Reading dependencies..."
@@ -331,21 +354,11 @@ function install_klipper_packages() {
   echo "${cyan}${packages}${white}" | tr '[:space:]' '\n'
   read -r -a packages <<< "${packages}"
 
-  ### Update system package info
-  status_msg "Updating package lists..."
-  if ! sudo apt-get update --allow-releaseinfo-change; then
-    log_error "failure while updating package lists"
-    error_msg "Updating package lists failed!"
-    exit 1
-  fi
+  ### Update system package lists if stale
+  update_system_package_lists
 
   ### Install required packages
-  status_msg "Installing required packages..."
-  if ! sudo apt-get install --yes "${packages[@]}"; then
-    log_error "failure while installing required klipper packages"
-    error_msg "Installing required packages failed!"
-    exit 1
-  fi
+  install_system_packages "${log_name}" "packages[@]"
 }
 
 function create_klipper_service() {
@@ -353,6 +366,7 @@ function create_klipper_service() {
 
   local printer_data
   local cfg_dir
+  local gcodes_dir
   local cfg
   local log
   local klippy_serial
@@ -365,6 +379,7 @@ function create_klipper_service() {
 
   printer_data="${HOME}/${instance_name}_data"
   cfg_dir="${printer_data}/config"
+  gcodes_dir="${printer_data}/gcodes"
   cfg="${cfg_dir}/printer.cfg"
   log="${printer_data}/logs/klippy.log"
   klippy_serial="${printer_data}/comms/klippy.serial"
@@ -388,25 +403,27 @@ function create_klipper_service() {
 
     sudo cp "${service_template}" "${service}"
     sudo cp "${env_template}" "${env_file}"
-    sudo sed -i "s|%USER%|${USER}|g; s|%ENV%|${KLIPPY_ENV}|; s|%ENV_FILE%|${env_file}|" "${service}"
-    sudo sed -i "s|%USER%|${USER}|; s|%LOG%|${log}|; s|%CFG%|${cfg}|; s|%PRINTER%|${klippy_serial}|; s|%UDS%|${klippy_socket}|" "${env_file}"
+    sudo sed -i "s|%USER%|${USER}|g; s|%KLIPPER_DIR%|${KLIPPER_DIR}|; s|%ENV%|${KLIPPY_ENV}|; s|%ENV_FILE%|${env_file}|" "${service}"
+    sudo sed -i "s|%USER%|${USER}|; s|%KLIPPER_DIR%|${KLIPPER_DIR}|; s|%LOG%|${log}|; s|%CFG%|${cfg}|; s|%PRINTER%|${klippy_serial}|; s|%UDS%|${klippy_socket}|" "${env_file}"
 
     ok_msg "Klipper service file created!"
   fi
 
   if [[ ! -f ${cfg} ]]; then
-    write_example_printer_cfg "${cfg}"
+    write_example_printer_cfg "${cfg}" "${gcodes_dir}"
   fi
 }
 
 function write_example_printer_cfg() {
   local cfg=${1}
+  local gcodes_dir=${2}
   local cfg_template
 
   cfg_template="${KIAUH_SRCDIR}/resources/example.printer.cfg"
 
   status_msg "Creating minimal example printer.cfg ..."
   if cp "${cfg_template}" "${cfg}"; then
+    sed -i "s|%GCODES_DIR%|${gcodes_dir}|" "${cfg}"
     ok_msg "Minimal example printer.cfg created!"
   else
     error_msg "Couldn't create minimal example printer.cfg!"
@@ -432,26 +449,18 @@ function install_usb_automount() {
 #================================================#
 
 function remove_klipper_service() {
-  if [[ ! -e "${INITD}/klipper" ]] && [[ -z $(find_klipper_systemd) ]]; then
-    return
-  fi
+  [[ -z $(klipper_systemd) ]] && return
 
   status_msg "Removing Klipper services ..."
 
-  if [[ -e "${INITD}/klipper" ]]; then
-    sudo systemctl stop klipper
-    sudo update-rc.d -f klipper remove
-    sudo rm -f "${INITD}/klipper" "${ETCDEF}/klipper"
-  else
-    for service in $(find_klipper_systemd | cut -d"/" -f5); do
-      status_msg "Removing ${service} ..."
-      sudo systemctl stop "${service}"
-      sudo systemctl disable "${service}"
-      sudo rm -f "${SYSTEMD}/${service}"
-      sudo systemctl daemon-reload
-      sudo systemctl reset-failed
-    done
-  fi
+  for service in $(klipper_systemd | cut -d"/" -f5); do
+    status_msg "Removing ${service} ..."
+    sudo systemctl stop "${service}"
+    sudo systemctl disable "${service}"
+    sudo rm -f "${SYSTEMD}/${service}"
+    sudo systemctl daemon-reload
+    sudo systemctl reset-failed
+  done
 
   ok_msg "All Klipper services removed!"
 }
@@ -580,13 +589,7 @@ function update_klipper() {
 
 function get_klipper_status() {
   local sf_count status py_ver
-  sf_count="$(find_klipper_systemd | wc -w)"
-
-  ### detect an existing "legacy" klipper init.d installation
-  if [[ $(find_klipper_systemd | wc -w) -eq 0 ]] \
-  && [[ $(find_klipper_initd | wc -w) -ge 1 ]]; then
-    sf_count=1
-  fi
+  sf_count="$(klipper_systemd | wc -w)"
 
   py_ver=$(get_klipper_python_ver)
 
@@ -628,8 +631,14 @@ function get_remote_klipper_commit() {
   [[ ! -d ${KLIPPER_DIR} || ! -d "${KLIPPER_DIR}/.git" ]] && return
 
   local commit
+  local branch
+
+  read_kiauh_ini "${FUNCNAME[0]}"
+  branch="${custom_klipper_repo_branch}"
+  [[ -z ${branch} ]] && branch="master"
+
   cd "${KLIPPER_DIR}" && git fetch origin -q
-  commit=$(git describe origin/master --always --tags | cut -d "-" -f 1,2)
+  commit=$(git describe "origin/${branch}" --always --tags | cut -d "-" -f 1,2)
   echo "${commit}"
 }
 
@@ -666,4 +675,28 @@ function get_klipper_python_ver() {
   local version
   version=$("${KLIPPY_ENV}"/bin/python --version 2>&1 | cut -d" " -f2 | cut -d"." -f1)
   echo "${version}"
+}
+
+function mask_disrupting_services() {
+  local brltty="false"
+  local brltty_udev="false"
+  local modem_manager="false"
+
+  [[ $(dpkg -s brltty  2>/dev/null | grep "Status") = *\ installed ]] && brltty="true"
+  [[ $(dpkg -s brltty-udev  2>/dev/null | grep "Status") = *\ installed ]] && brltty_udev="true"
+  [[ $(dpkg -s ModemManager  2>/dev/null | grep "Status") = *\ installed ]] && modem_manager="true"
+
+  status_msg "Installed brltty package detected, masking brltty service ..."
+  if [[ ${brltty_udev} == "true" ]]; then
+    sudo systemctl stop brltty-udev
+    sudo systemctl mask brltty-udev
+  fi
+  ok_msg "brltty-udev service masked!"
+
+  status_msg "Installed ModemManager package detected, masking ModemManager service ..."
+  if [[ ${modem_manager} == "true" ]]; then
+    sudo systemctl stop ModemManager
+    sudo systemctl mask ModemManager
+  fi
+  ok_msg "ModemManager service masked!"
 }

@@ -16,10 +16,24 @@ set -e
 #===================================================#
 
 function install_fluidd() {
-  ### exit early if moonraker not found
   if [[ -z $(moonraker_systemd) ]]; then
-    local error="Moonraker not installed! Please install Moonraker first!"
-    print_error "${error}" && return
+    local error="Moonraker not installed! It's recommended to install Moonraker first!"
+    print_error "${error}"
+    while true; do
+      local yn
+      read -p "${cyan}###### Proceed to install Fluidd without installing Moonraker? (y/N):${white} " yn
+      case "${yn}" in
+        Y|y|Yes|yes)
+          select_msg "Yes"
+          break;;
+        N|n|No|no|"")
+          select_msg "No"
+          abort_msg "Exiting Fluidd setup ...\n"
+          return;;
+        *)
+          error_msg "Invalid Input!";;
+      esac
+    done
   fi
 
   ### checking dependencies
@@ -30,7 +44,7 @@ function install_fluidd() {
 
   status_msg "Initializing Fluidd installation ..."
   ### first, we create a backup of the full klipper_config dir - safety first!
-  backup_klipper_config_dir
+  backup_config_dir
 
   ### check for other enabled web interfaces
   unset SET_LISTEN_PORT
@@ -38,30 +52,6 @@ function install_fluidd() {
 
   ### check if another site already listens to port 80
   fluidd_port_check
-
-#  ### ask user to install mjpg-streamer
-#  local install_mjpg_streamer
-#  if [[ ! -f "${SYSTEMD}/webcamd.service" ]]; then
-#    while true; do
-#      echo
-#      top_border
-#      echo -e "| Install MJPG-Streamer for webcam support?             |"
-#      bottom_border
-#      read -p "${cyan}###### Please select (y/N):${white} " yn
-#      case "${yn}" in
-#        Y|y|Yes|yes)
-#          select_msg "Yes"
-#          install_mjpg_streamer="true"
-#          break;;
-#        N|n|No|no|"")
-#          select_msg "No"
-#          install_mjpg_streamer="false"
-#          break;;
-#        *)
-#          error_msg "Invalid command!";;
-#      esac
-#    done
-#  fi
 
   ### download fluidd
   download_fluidd
@@ -82,9 +72,6 @@ function install_fluidd() {
   ### add fluidd to the update manager in moonraker.conf
   patch_fluidd_update_manager
 
-  ### install mjpg-streamer
-#  [[ ${install_mjpg_streamer} == "true" ]] && install_mjpg-streamer
-
   fetch_webui_ports #WIP
 
   ### confirm message
@@ -92,6 +79,7 @@ function install_fluidd() {
 }
 
 function install_fluidd_macros() {
+  local yn
   while true; do
     echo
     top_border
@@ -100,14 +88,13 @@ function install_fluidd_macros() {
     echo -e "| functional and working.                               |"
     blank_line
     echo -e "| The recommended macros for Fluidd can be found here:  |"
-    echo -e "| https://docs.fluidd.xyz/configuration/initial_setup   |"
+    echo -e "| https://github.com/fluidd-core/fluidd-config           |"
     blank_line
-    echo -e "| If you already have these macros in your config file, |"
-    echo -e "| skip this step and answer with 'no'.                  |"
+    echo -e "| If you already use these macros skip this step.       |"
     echo -e "| Otherwise you should consider to answer with 'yes' to |"
-    echo -e "| add the recommended example macros to your config.    |"
+    echo -e "| download the recommended macros.                      |"
     bottom_border
-    read -p "${cyan}###### Add the recommended macros? (Y/n):${white} " yn
+    read -p "${cyan}###### Download the recommended macros? (Y/n):${white} " yn
     case "${yn}" in
       Y|y|Yes|yes|"")
         select_msg "Yes"
@@ -124,36 +111,63 @@ function install_fluidd_macros() {
 }
 
 function download_fluidd_macros() {
-  local fluidd_cfg path configs regex
+  local ms_cfg_repo path configs regex line gcode_dir
 
-  fluidd_cfg="https://raw.githubusercontent.com/fluidd-core/FluiddPI/master/src/modules/fluidd/filesystem/home/pi/klipper_config/fluidd.cfg"
-  regex="\/home\/${USER}\/([A-Za-z0-9_]+)\/config\/printer\.cfg"
+  ms_cfg_repo="https://github.com/fluidd-core/fluidd-config.git"
+  regex="${HOME//\//\\/}\/([A-Za-z0-9_]+)\/config\/printer\.cfg"
   configs=$(find "${HOME}" -maxdepth 3 -regextype posix-extended -regex "${regex}" | sort)
 
-  if [[ -n ${configs} ]]; then
-    for config in ${configs}; do
-      path=$(echo "${config}" | rev | cut -d"/" -f2- | rev)
-      if [[ ! -f "${path}/fluidd.cfg" ]]; then
-        status_msg "Downloading fluidd.cfg to ${path} ..."
-        log_info "downloading fluidd.cfg to: ${path}"
-        wget "${fluidd_cfg}" -O "${path}/fluidd.cfg"
-
-        ### replace user 'pi' with current username to prevent issues in cases where the user is not called 'pi'
-        log_info "modify fluidd.cfg"
-        sed -i "/^path: \/home\/pi\/gcode_files/ s/\/home\/pi/\/home\/${USER}/" "${path}/fluidd.cfg"
-
-        ### write include to the very first line of the printer.cfg
-        if ! grep -Eq "^[include fluidd.cfg]$" "${path}/printer.cfg"; then
-          log_info "modify printer.cfg"
-          sed -i "1 i [include fluidd.cfg]" "${path}/printer.cfg"
-        fi
-        ok_msg "Done!"
-      fi
-    done
-  else
+  if [[ -z ${configs} ]]; then
+    print_error "No printer.cfg found! Installation of Macros will be skipped ..."
     log_error "execution stopped! reason: no printer.cfg found"
     return
   fi
+
+  status_msg "Cloning fluidd-config ..."
+  [[ -d "${HOME}/fluidd-config" ]] && rm -rf "${HOME}/fluidd-config"
+  if git clone --recurse-submodules "${ms_cfg_repo}" "${HOME}/fluidd-config"; then
+    for config in ${configs}; do
+      path=$(echo "${config}" | rev | cut -d"/" -f2- | rev)
+      if [[ -e "${path}/fluidd.cfg" && ! -h "${path}/fluidd.cfg" ]]; then
+        warn_msg "Attention! Existing fluidd.cfg detected!"
+        warn_msg "The file will be renamed to 'fluidd.bak.cfg' to be able to continue with the installation."
+        if ! mv "${path}/fluidd.cfg" "${path}/fluidd.bak.cfg"; then
+          error_msg "Renaming fluidd.cfg failed! Aborting installation ..."
+          return
+        fi
+      fi
+
+      if [[ -h "${path}/fluidd.cfg" ]]; then
+        warn_msg "Recreating symlink in ${path} ..."
+        rm -rf "${path}/fluidd.cfg"
+      fi
+
+      if ! ln -sf "${HOME}/fluidd-config/client.cfg" "${path}/fluidd.cfg"; then
+        error_msg "Creating symlink failed! Aborting installation ..."
+        return
+      fi
+
+      if ! grep -Eq "^\[include fluidd.cfg\]$" "${path}/printer.cfg"; then
+        log_info "${path}/printer.cfg"
+        sed -i "1 i [include fluidd.cfg]" "${path}/printer.cfg"
+      fi
+
+      line=$(($(grep -n "\[include fluidd.cfg\]" "${path}/printer.cfg" | tail -1 | cut -d: -f1) + 1))
+      gcode_dir=${path/config/gcodes}
+      if ! grep -Eq "^\[virtual_sdcard\]$" "${path}/printer.cfg"; then
+        log_info "${path}/printer.cfg"
+        sed -i "${line} i \[virtual_sdcard]\npath: ${gcode_dir}\non_error_gcode: CANCEL_PRINT\n" "${path}/printer.cfg"
+      fi
+    done
+  else
+    print_error "Cloning failed! Aborting installation ..."
+    log_error "execution stopped! reason: cloning failed"
+    return
+  fi
+
+  patch_fluidd_config_update_manager
+
+  ok_msg "Done!"
 }
 
 function download_fluidd() {
@@ -191,7 +205,7 @@ function remove_fluidd_dir() {
   rm -rf "${FLUIDD_DIR}" && ok_msg "Directory removed!"
 }
 
-function remove_fluidd_config() {
+function remove_fluidd_nginx_config() {
   if [[ -e "/etc/nginx/sites-available/fluidd" ]]; then
     status_msg "Removing Fluidd configuration for Nginx ..."
     sudo rm "/etc/nginx/sites-available/fluidd" && ok_msg "File removed!"
@@ -218,7 +232,7 @@ function remove_fluidd_logs() {
 function remove_fluidd_log_symlinks() {
   local files regex
 
-  regex="\/home\/${USER}\/([A-Za-z0-9_]+)\/logs\/fluidd-.*"
+  regex="${HOME//\//\\/}\/([A-Za-z0-9_]+)\/logs\/fluidd-.*"
   files=$(find "${HOME}" -maxdepth 3 -regextype posix-extended -regex "${regex}" 2> /dev/null | sort)
 
   if [[ -n ${files} ]]; then
@@ -243,9 +257,18 @@ function remove_legacy_fluidd_log_symlinks() {
   fi
 }
 
+function remove_fluidd_config() {
+  if [[ -d "${HOME}/fluidd-config"  ]]; then
+    status_msg "Removing ${HOME}/fluidd-config ..."
+    rm -rf "${HOME}/fluidd-config"
+    ok_msg "${HOME}/fluidd-config removed!"
+    print_confirm "Fluidd-Config successfully removed!"
+  fi
+}
+
 function remove_fluidd() {
   remove_fluidd_dir
-  remove_fluidd_config
+  remove_fluidd_nginx_config
   remove_fluidd_logs
   remove_fluidd_log_symlinks
   remove_legacy_fluidd_log_symlinks
@@ -294,19 +317,24 @@ function get_fluidd_status() {
 }
 
 function get_local_fluidd_version() {
-  [[ ! -f "${FLUIDD_DIR}/.version" ]] && return
+  local versionfile="${FLUIDD_DIR}/.version"
+  local relinfofile="${FLUIDD_DIR}/release_info.json"
 
   local version
-  version=$(head -n 1 "${FLUIDD_DIR}/.version")
+  if [[ -f ${relinfofile} ]]; then
+    version=$(grep -o '"version":"[^"]*' "${relinfofile}" | grep -o '[^"]*$')
+  elif [[ -f ${versionfile} ]]; then
+    version=$(head -n 1 "${versionfile}")
+  fi
   echo "${version}"
 }
 
 function get_remote_fluidd_version() {
   [[ ! $(dpkg-query -f'${Status}' --show curl 2>/dev/null) = *\ installed ]] && return
 
-  local version
-  version=$(get_fluidd_download_url | rev | cut -d"/" -f2 | rev)
-  echo "${version}"
+  local tags
+  tags=$(curl -s "https://api.github.com/repos/UselessJoy/fluidd/tags" | grep "name" | cut -d'"' -f4)
+  echo "${tags}" | head -1
 }
 
 function compare_fluidd_versions() {
@@ -332,29 +360,28 @@ function compare_fluidd_versions() {
 #================================================#
 
 function get_fluidd_download_url() {
-  local fl_tags tags latest_tag latest_url stable_tag stable_url url
-
-  fl_tags="https://api.github.com/repos/UselessJoy/fluidd/tags"
-  tags=$(curl -s "${fl_tags}" | grep "name" | cut -d'"' -f4)
-
-  ### latest download url including pre-releases (alpha, beta, rc)
-  latest_tag=$(echo "${tags}" | head -1)
-  latest_url="https://github.com/UselessJoy/fluidd/releases/download/${latest_tag}/fluidd.zip"
-
-  ### get stable fluidd download url
-  stable_tag=$(echo "${tags}" | grep -E "^v([0-9]+\.?)" | head -1)
-  stable_url="https://github.com/UselessJoy/fluidd/releases/download/${stable_tag}/fluidd.zip"
+  local releases_by_tag tags tag unstable_url url
+  ### latest stable download url
+  url="https://github.com/UselessJoy/fluidd/releases/latest/download/fluidd.zip"
 
   read_kiauh_ini "${FUNCNAME[0]}"
   if [[ ${fluidd_install_unstable} == "true" ]]; then
-    url="${latest_url}"
-    echo "${url}"
-  else
-    url="${stable_url}"
-    echo "${url}"
+    releases_by_tag="https://api.github.com/repos/UselessJoy/fluidd/tags"
+    tags=$(curl -s "${releases_by_tag}" | grep "name" | cut -d'"' -f4)
+    tag=$(echo "${tags}" | head -1)
+
+    ### latest unstable download url including pre-releases (alpha, beta, rc)
+    unstable_url="https://github.com/UselessJoy/fluidd/releases/download/${tag}/fluidd.zip"
+
+    if [[ ${unstable_url} == *"download//"* ]]; then
+      warn_msg "Download URL broken! Falling back to URL of latest stable release!"
+    else
+      url=${unstable_url}
+    fi
   fi
-echo "${latest_url}"
+  echo "${url}"
 }
+
 
 function fluidd_port_check() {
   if [[ ${FLUIDD_ENABLED} == "false" ]]; then
@@ -390,7 +417,7 @@ function select_fluidd_port() {
     blank_line
     [[ ${MAINSAIL_PORT} == "80" ]] && echo "|  ● Mainsail                                           |"
     blank_line
-    echo -e "| Make sure you don't choose a port which is already    |"
+    echo -e "| Make sure you don't choose a port which was already   |"
     echo -e "| assigned to another webinterface!                     |"
     blank_line
     echo -e "| Be aware: there is ${red}NO${white} sanity check for the following  |"
@@ -417,7 +444,7 @@ function select_fluidd_port() {
 
 function patch_fluidd_update_manager() {
   local patched moonraker_configs regex
-  regex="\/home\/${USER}\/([A-Za-z0-9_]+)\/config\/moonraker\.conf"
+  regex="${HOME//\//\\/}\/([A-Za-z0-9_]+)\/config\/moonraker\.conf"
   moonraker_configs=$(find "${HOME}" -maxdepth 3 -type f -regextype posix-extended -regex "${regex}" | sort)
 
   patched="false"
@@ -435,6 +462,38 @@ type: web
 channel: stable
 repo: UselessJoy/fluidd
 path: ~/fluidd
+MOONRAKER_CONF
+
+    fi
+
+    patched="true"
+  done
+
+  if [[ ${patched} == "true" ]]; then
+    do_action_service "restart" "moonraker"
+  fi
+}
+
+function patch_fluidd_config_update_manager() {
+  local patched moonraker_configs regex
+  regex="${HOME//\//\\/}\/([A-Za-z0-9_]+)\/config\/moonraker\.conf"
+  moonraker_configs=$(find "${HOME}" -maxdepth 3 -type f -regextype posix-extended -regex "${regex}" | sort)
+
+  patched="false"
+  for conf in ${moonraker_configs}; do
+    if ! grep -Eq "^\[update_manager fluidd-config\]\s*$" "${conf}"; then
+      ### add new line to conf if it doesn't end with one
+      [[ $(tail -c1 "${conf}" | wc -l) -eq 0 ]] && echo "" >> "${conf}"
+
+      ### add Fluidds update manager section to moonraker.conf
+      status_msg "Adding Fluidd-Config to update manager in file:\n       ${conf}"
+      /bin/sh -c "cat >> ${conf}" << MOONRAKER_CONF
+[update_manager fluidd-config]
+type: git_repo
+primary_branch: master
+path: ~/fluidd-config
+origin: https://github.com/fluidd-core/fluidd-config.git
+managed_services: klipper
 MOONRAKER_CONF
 
     fi

@@ -30,7 +30,7 @@ function install_klipperscreen() {
   fi
 
   ### first, we create a backup of the full klipper_config dir - safety first!
-  backup_klipper_config_dir
+  backup_config_dir
 
   ### install KlipperScreen
   klipperscreen_setup
@@ -119,6 +119,7 @@ function update_klipperscreen() {
   old_md5=$(md5sum "${KLIPPERSCREEN_DIR}/scripts/KlipperScreen-requirements.txt" | cut -d " " -f1)
 
   do_action_service "stop" "KlipperScreen"
+  backup_before_update "klipperscreen"
   cd "${KLIPPERSCREEN_DIR}"
   git pull origin master -q && ok_msg "Fetch successfull!"
   git checkout -f master && ok_msg "Checkout successfull"
