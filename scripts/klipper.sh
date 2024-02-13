@@ -298,7 +298,7 @@ function clone_klipper() {
   cd "${HOME}" || exit 1
   if [[ ! -d ${KLIPPER_DIR} ]]; then
     status_msg "Cloning Klipper from ${repo} ..."
-    if [[ ! git clone ${repo} ${KLIPPER_DIR} ]]; then
+    if [ ! git clone "${repo}" "${KLIPPER_DIR}" ]; then
       print_error "Cloning Klipper from\n ${repo}\n failed!"
       exit 1
     fi
