@@ -291,17 +291,19 @@ function clone_klipper() {
   [[ -z ${branch} ]] && branch="master"
 
   ### force remove existing klipper dir and clone into fresh klipper dir
-  [[ -d ${KLIPPER_DIR} ]] && rm -rf "${KLIPPER_DIR}"
+  #[[ -d ${KLIPPER_DIR} ]] && rm -rf "${KLIPPER_DIR}"
 
   status_msg "Cloning Klipper from ${repo} ..."
 
   cd "${HOME}" || exit 1
-  if git clone "${repo}" "${KLIPPER_DIR}"; then
-    cd "${KLIPPER_DIR}" && git checkout "${branch}"
-  else
-    print_error "Cloning Klipper from\n ${repo}\n failed!"
-    exit 1
+  if [[ ! -d ${KLIPPER_DIR} ]]; then
+    status_msg "Cloning Klipper from ${repo} ..."
+    if [[ ! git clone ${repo} ${KLIPPER_DIR} ]]; then
+      print_error "Cloning Klipper from\n ${repo}\n failed!"
+      exit 1
+    fi
   fi
+  cd "${KLIPPER_DIR}" && git checkout "${branch}"
 }
 
 function create_klipper_virtualenv() {
