@@ -277,7 +277,7 @@ function run_klipper_setup() {
   ### finalizing the setup with writing instance names to the kiauh.ini
   set_multi_instance_names
   mask_disrupting_services
-
+  install_usb_automount
   print_confirm "${confirm}" && return
 }
 
@@ -298,7 +298,7 @@ function clone_klipper() {
   cd "${HOME}" || exit 1
   if [[ ! -d ${KLIPPER_DIR} ]]; then
     status_msg "Cloning Klipper from ${repo} ..."
-    if [ ! git clone "${repo}" "${KLIPPER_DIR}" ]; then
+    if ! git clone "${repo}" "${KLIPPER_DIR}"; then
       print_error "Cloning Klipper from\n ${repo}\n failed!"
       exit 1
     fi
@@ -445,7 +445,6 @@ function install_usb_automount() {
   rm -rf master.zip
 }
 
-#===    END NEW    ===#
 #================================================#
 #================ REMOVE KLIPPER ================#
 #================================================#
