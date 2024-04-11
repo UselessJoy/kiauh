@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 #=======================================================================#
-# Copyright (C) 2020 - 2022 Dominik Willner <th33xitus@gmail.com>       #
+# Copyright (C) 2020 - 2024 Dominik Willner <th33xitus@gmail.com>       #
 #                                                                       #
 # This file is part of KIAUH - Klipper Installation And Update Helper   #
-# https://github.com/th33xitus/kiauh                                    #
+# https://github.com/dw-0/kiauh                                         #
 #                                                                       #
 # This file may be distributed under the terms of the GNU GPLv3 license #
 #=======================================================================#
@@ -34,9 +34,7 @@ function install_klipperscreen() {
 
   ### install KlipperScreen
   klipperscreen_setup
-  
-  ### create KlipperScreen config
-  klipperscreen_create_config
+
   ### add klipperscreen to the update manager in moonraker.conf
   patch_klipperscreen_update_manager
 
@@ -122,6 +120,7 @@ function update_klipperscreen() {
 
   do_action_service "stop" "KlipperScreen"
   backup_before_update "klipperscreen"
+
   cd "${KLIPPERSCREEN_DIR}"
   git pull origin master -q && ok_msg "Fetch successfull!"
   git checkout -f master && ok_msg "Checkout successfull"
@@ -198,28 +197,6 @@ function compare_klipperscreen_versions() {
   fi
 
   echo "${versions}"
-}
-
-function klipperscreen_create_config() {
-  local config_dir
-  local configfile
-  local printer_data
- 
-  status_msg "Writing Config File ${config_file}:\n"
-  printer_data = "${HOME}/printer_data"
-  config_dir="${HOME}/printer_data/config"
-  config_file = "${config_dir}/KlipperScreen.conf"
-
-  [ ! -e "${printer_data}" ] && mkdir ${printer_data}
-  [ ! -e "${config_dir}" ] && mkdir ${config_dir}
-  # Write initial configuration for first time installs
-  if [ ! -e "${config_file}" ]; then
-      /bin/sh -c "cat > ${config_file}" << EOF
-# KlipperScreen Configuration File
-[printer Гелиос]
-EOF
-    fi
-  ok_msg "Config File ${config_file} was created!\n"
 }
 
 #================================================#
