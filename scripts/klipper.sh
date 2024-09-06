@@ -435,7 +435,7 @@ function write_example_printer_cfg() {
 function install_usb_automount() {
   cd ~
   git clone https://github.com/UselessJoy/udev-media-automount
-  cd udev-media-automount-master
+  cd udev-media-automount
   sudo make install
   sudo udevadm control --reload-rules
   sudo udevadm trigger
