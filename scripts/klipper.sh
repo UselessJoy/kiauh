@@ -336,7 +336,7 @@ function install_klipper_packages() {
     system="redos"
   fi
   local install_script="${KLIPPER_DIR}/scripts/install-${system}.sh"
-
+  status_msg "Get package list from $install_script"
   status_msg "Reading dependencies..."
   # shellcheck disable=SC2016
   packages=$(grep "PKGLIST=" "${install_script}" | cut -d'"' -f2 | sed 's/\${PKGLIST}//g' | tr -d '\n')
