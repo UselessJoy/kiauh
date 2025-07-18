@@ -377,19 +377,21 @@ function update_system_package_lists() {
   update_age="$(($(date +'%s') - cache_mtime))"
   update_interval=$((48*60*60)) # 48hrs
   update_cmd="sudo $PKG_MANAGER update"
-   if [[ "$PKG_MANAGER" != "dnf" ]]; then
-        update_cmd+=" --allow-releaseinfo-change"
-   fi
+  if [[ "$PKG_MANAGER" == "apt" ]]; then
+      update_cmd+=" --allow-releaseinfo-change"
+  fi
+  if [[ ${silent} == "true" ]]; then
+      update_cmd+=" &>/dev/null"
+  fi
   # update if cache is greater than update_interval
   if (( update_age > update_interval )); then
-    if [[ ! ${silent} == "true" ]]; then status_msg "Updating package lists..."; fi
-    if ! $update_cmd &>/dev/null; then
+    status_msg "Updating package lists..."
+    if ! $update_cmd; then
       log_error "Failure while updating package lists!"
-      if [[ ! ${silent} == "true" ]]; then error_msg "Updating package lists failed!"; fi
+      error_msg "Updating package lists failed!"
       return 1
     else
-      log_info "Package lists updated successfully"
-      if [[ ! ${silent} == "true" ]]; then status_msg "Updated package lists."; fi
+      status_msg "Updated package lists."
     fi
   else
     log_info "Package lists updated recently, skipping update..."
