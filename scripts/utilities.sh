@@ -361,7 +361,7 @@ function create_required_folders() {
 }
 
 function update_system_package_lists() {
-  local cache_mtime update_age update_interval silent
+  local cache_mtime update_age update_interval silent update_cmd
   
   if [[ $1 == '--silent' ]]; then silent="true"; fi
   
@@ -376,11 +376,14 @@ function update_system_package_lists() {
 
   update_age="$(($(date +'%s') - cache_mtime))"
   update_interval=$((48*60*60)) # 48hrs
-
+  update_cmd="sudo $PKG_MANAGER update"
+   if [[ "$PKG_MANAGER" != "dnf" ]]; then
+        update_cmd+=" --allow-releaseinfo-change"
+   fi
   # update if cache is greater than update_interval
   if (( update_age > update_interval )); then
     if [[ ! ${silent} == "true" ]]; then status_msg "Updating package lists..."; fi
-    if ! sudo $PKG_MANAGER update --allow-releaseinfo-change &>/dev/null; then
+    if ! $update_cmd &>/dev/null; then
       log_error "Failure while updating package lists!"
       if [[ ! ${silent} == "true" ]]; then error_msg "Updating package lists failed!"; fi
       return 1
