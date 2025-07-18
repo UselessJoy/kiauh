@@ -347,7 +347,11 @@ function install_klipper_packages() {
 
   if (( python_version == 3 )); then
     ### replace python-dev with python3-dev if python3 was selected
-    packages="${packages//python-dev/python3-dev}"
+    if [[ "$PKG_MANAGER" == "apt" ]]; then
+      packages="${packages//python-dev/python3-dev}"
+    else
+      packages="${packages//python-devel/python3-devel}"
+    fi
   elif (( python_version == 2 )); then
     ### package name 'python-dev' is deprecated (-> no installation candidate) on more modern linux distros
     packages="${packages//python-dev/python2-dev}"
