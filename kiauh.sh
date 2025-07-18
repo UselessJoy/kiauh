@@ -18,6 +18,22 @@ for script in "${KIAUH_SRCDIR}/scripts/"*.sh; do . "${script}"; done
 for script in "${KIAUH_SRCDIR}/scripts/ui/"*.sh; do . "${script}"; done
 
 #===================================================#
+#=============== PACKAGE MANAGER DETECT ============#
+#===================================================#
+
+function detect_package_manager() {
+  if command -v apt &> /dev/null; then
+    echo "apt"
+  elif command -v dnf &> /dev/null; then
+    echo "dnf"
+  else
+    echo "unknown"
+  fi
+}
+
+PKG_MANAGER=$(detect_package_manager)
+
+#===================================================#
 #=================== UPDATE KIAUH ==================#
 #===================================================#
 

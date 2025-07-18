@@ -380,7 +380,7 @@ function update_system_package_lists() {
   # update if cache is greater than update_interval
   if (( update_age > update_interval )); then
     if [[ ! ${silent} == "true" ]]; then status_msg "Updating package lists..."; fi
-    if ! sudo apt-get update --allow-releaseinfo-change &>/dev/null; then
+    if ! sudo $PKG_MANAGER update --allow-releaseinfo-change &>/dev/null; then
       log_error "Failure while updating package lists!"
       if [[ ! ${silent} == "true" ]]; then error_msg "Updating package lists failed!"; fi
       return 1
@@ -415,7 +415,7 @@ function check_system_updates() {
 function upgrade_system_packages() {
   status_msg "Upgrading System ..."
   update_system_package_lists
-  if sudo apt-get upgrade -y; then
+  if sudo $PKG_MANAGER upgrade -y; then
     print_confirm "Upgrade complete! Check the log above!\n ${yellow}KIAUH will not install any dist-upgrades or\n any packages which have been held back!${green}"
   else
     print_error "System upgrade failed! Please look for any errors printed above!"
@@ -426,7 +426,7 @@ function install_system_packages() {
   local log_name="$1"
   local packages=("${!2}")
   status_msg "Installing packages..."
-  if sudo apt-get install -y "${packages[@]}"; then
+  if sudo $PKG_MANAGER install -y "${packages[@]}"; then
     ok_msg "${log_name^} packages installed!"
   else
     log_error "Failure while installing ${log_name,,} packages"

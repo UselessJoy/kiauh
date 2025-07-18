@@ -331,7 +331,11 @@ function create_klipper_virtualenv() {
 #
 function install_klipper_packages() {
   local packages log_name="Klipper" python_version="${1}"
-  local install_script="${KLIPPER_DIR}/scripts/install-debian.sh"
+  local system="debian"
+  if [[ $PKG_MANAGER == "dnf" ]]; then
+    system="redos"
+  fi
+  local install_script="${KLIPPER_DIR}/scripts/install-${system}.sh"
 
   status_msg "Reading dependencies..."
   # shellcheck disable=SC2016
