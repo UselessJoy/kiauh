@@ -289,6 +289,7 @@ function set_nginx_cfg() {
 
     # copy config to destination and set correct username
     [[ -f ${cfg_dest} ]] && sudo rm -f "${cfg_dest}"
+    sudo mkdir /etc/nginx/sites-available
     sudo cp "${cfg_src}" "${cfg_dest}"
     sudo sed -i "/root/s/pi/${USER}/" "${cfg_dest}"
 
