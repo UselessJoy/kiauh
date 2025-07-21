@@ -142,15 +142,16 @@ function moonraker_setup_dialog() {
 
 function install_moonraker_dependencies() {
   local packages log_name="Moonraker"
-  local install_script="${MOONRAKER_DIR}/scripts/install-moonraker.sh"
-  local system="DEBIAN"
+  local system="debian"
   if [[ $PKG_MANAGER == "dnf" ]]; then
-    system="REDOS"
+    system="redos"
   fi
+  local install_script="${MOONRAKER_DIR}/scripts/install-moonraker-${system}.sh"
+  
   ### read PKGLIST from official install-script
   status_msg "Reading dependencies..."
   # shellcheck disable=SC2016
-  packages="$(grep "PKGLIST_${system}=" "${install_script}" | cut -d'"' -f2 | sed 's/\${PKGLIST_${system}}//g' | tr -d '\n')"
+  packages="$(grep "PKGLIST=" "${install_script}" | cut -d'"' -f2 | sed 's/\${PKGLIST}//g' | tr -d '\n')"
 
   echo "${cyan}${packages}${white}" | tr '[:space:]' '\n'
   read -r -a packages <<< "${packages}"
