@@ -178,9 +178,11 @@ function create_moonraker_virtualenv() {
 function moonraker_setup() {
   local instance_arr=("${@}")
   ### checking dependencies
-  local dep=(git wget curl unzip dfu-util virtualenv)
-  ### additional required dependencies on armbian
-  dep+=(libjpeg-dev zlib1g-dev)
+  local dep=(git wget curl unzip dfu-util virtualenv libjpeg-dev zlib1g-dev)
+  if [[ $PKG_MANAGER == "dnf" ]]; then
+    sudo dnf install epel-release
+    dep=(git wget curl unzip dfu-util python3-virtualenv libjpeg-turbo-devel zlib-devel)
+  fi
   dependency_check "${dep[@]}"
 
   ### step 1: clone moonraker
