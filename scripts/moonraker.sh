@@ -150,7 +150,7 @@ function install_moonraker_dependencies() {
   ### read PKGLIST from official install-script
   status_msg "Reading dependencies..."
   # shellcheck disable=SC2016
-  packages="$(grep "PKGLIST_${system}=" "${install_script}" | cut -d'"' -f2 | sed 's/\${PKGLIST}//g' | tr -d '\n')"
+  packages="$(grep "PKGLIST_${system}=" "${install_script}" | cut -d'"' -f2 | sed 's/\${PKGLIST_${system}}//g' | tr -d '\n')"
 
   echo "${cyan}${packages}${white}" | tr '[:space:]' '\n'
   read -r -a packages <<< "${packages}"
