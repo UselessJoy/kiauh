@@ -180,7 +180,7 @@ function moonraker_setup() {
   ### checking dependencies
   local dep=(git wget curl unzip dfu-util virtualenv libjpeg-dev zlib1g-dev)
   if [[ $PKG_MANAGER == "dnf" ]]; then
-    sudo dnf install epel-release
+    # sudo dnf install epel-release
     dep=(git wget curl unzip dfu-util python3-virtualenv libjpeg-turbo-devel zlib-devel)
   fi
   dependency_check "${dep[@]}"
