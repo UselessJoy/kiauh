@@ -143,7 +143,7 @@ function moonraker_setup_dialog() {
 function install_moonraker_dependencies() {
   local packages log_name="Moonraker"
   local install_script="${MOONRAKER_DIR}/scripts/install-moonraker.sh"
-  local system = "DEBIAN"
+  local system="DEBIAN"
   if [[ $PKG_MANAGER == "dnf" ]]; then
     system="REDOS"
   fi
