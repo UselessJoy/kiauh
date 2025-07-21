@@ -274,39 +274,107 @@ function detect_conflicting_packages() {
   fi
 }
 
+# function set_nginx_cfg() {
+#   local interface=${1}
+
+#   if [[ ${SET_NGINX_CFG} == "true" ]]; then
+#     #check for dependencies
+#     local dep=(nginx)
+#     dependency_check "${dep[@]}"
+
+#     local cfg_src="${RESOURCES}/${interface}"
+#     local cfg_dest="/etc/nginx/sites-available/${interface}"
+
+#     status_msg "Creating NGINX configuration for ${interface^} ..."
+
+#     # copy config to destination and set correct username
+#     [[ -f ${cfg_dest} ]] && sudo rm -f "${cfg_dest}"
+#     sudo cp "${cfg_src}" "${cfg_dest}"
+#     sudo sed -i "/root/s/pi/${USER}/" "${cfg_dest}"
+
+#     if [[ ${SET_LISTEN_PORT} != "${DEFAULT_PORT}" ]]; then
+#       sudo sed -i "s/listen\s[0-9]*;/listen ${SET_LISTEN_PORT};/" "${cfg_dest}"
+#       sudo sed -i "s/listen\s\[\:*\]\:[0-9]*;/listen \[::\]\:${SET_LISTEN_PORT};/" "${cfg_dest}"
+#     fi
+
+#     #remove nginx default config
+#     if [[ -e "/etc/nginx/sites-enabled/default" ]]; then
+#       sudo rm "/etc/nginx/sites-enabled/default"
+#     fi
+
+#     #create symlink for own sites
+#     if [[ ! -e "/etc/nginx/sites-enabled/${interface}" ]]; then
+#       sudo ln -s "/etc/nginx/sites-available/${interface}" "/etc/nginx/sites-enabled/"
+#     fi
+
+#     if [[ -n ${SET_LISTEN_PORT} ]]; then
+#       ok_msg "${interface^} configured for port ${SET_LISTEN_PORT}!"
+#     else
+#       ok_msg "${interface^} configured for default port ${DEFAULT_PORT}!"
+#     fi
+
+#     sudo systemctl restart nginx.service
+
+#     ok_msg "NGINX configuration for ${interface^} was set!"
+#   fi
+# }
+
 function set_nginx_cfg() {
   local interface=${1}
 
   if [[ ${SET_NGINX_CFG} == "true" ]]; then
-    #check for dependencies
+    # Проверка зависимостей
     local dep=(nginx)
     dependency_check "${dep[@]}"
 
+    # Определение путей в зависимости от системы
     local cfg_src="${RESOURCES}/${interface}"
-    local cfg_dest="/etc/nginx/sites-available/${interface}"
+    local cfg_dest
+    local default_cfg_path
+
+    if [[ $PKG_MANAGER == "apt" ]]; then
+      # Debian-based пути
+      cfg_dest="/etc/nginx/sites-available/${interface}"
+      default_cfg_path="/etc/nginx/sites-enabled/default"
+    else
+      # RedOS/RHEL-based пути
+      cfg_dest="/etc/nginx/conf.d/${interface}.conf"
+      default_cfg_path="/etc/nginx/conf.d/default.conf"
+      
+      # Добавляем include в nginx.conf если нужно
+      if ! grep -q "include /etc/nginx/conf.d/\*.conf;" /etc/nginx/nginx.conf; then
+        sudo sed -i '/http\s*{/a \    include /etc/nginx/conf.d/*.conf;' /etc/nginx/nginx.conf
+      fi
+    fi
 
     status_msg "Creating NGINX configuration for ${interface^} ..."
 
-    # copy config to destination and set correct username
+    # Копирование конфига с заменой пользователя
     [[ -f ${cfg_dest} ]] && sudo rm -f "${cfg_dest}"
-    sudo mkdir /etc/nginx/sites-available
     sudo cp "${cfg_src}" "${cfg_dest}"
     sudo sed -i "/root/s/pi/${USER}/" "${cfg_dest}"
 
+    # Изменение порта (если нужно)
     if [[ ${SET_LISTEN_PORT} != "${DEFAULT_PORT}" ]]; then
       sudo sed -i "s/listen\s[0-9]*;/listen ${SET_LISTEN_PORT};/" "${cfg_dest}"
       sudo sed -i "s/listen\s\[\:*\]\:[0-9]*;/listen \[::\]\:${SET_LISTEN_PORT};/" "${cfg_dest}"
     fi
 
-    #remove nginx default config
-    if [[ -e "/etc/nginx/sites-enabled/default" ]]; then
-      sudo rm "/etc/nginx/sites-enabled/default"
+    # Удаление default конфига
+    if [[ -e "${default_cfg_path}" ]]; then
+      sudo rm -f "${default_cfg_path}"
     fi
 
-    #create symlink for own sites
-    if [[ ! -e "/etc/nginx/sites-enabled/${interface}" ]]; then
-      sudo ln -s "/etc/nginx/sites-available/${interface}" "/etc/nginx/sites-enabled/"
+    # Для Debian-based систем: создаем symlink
+    if [[ $PKG_MANAGER == "apt" ]]; then
+      if [[ ! -e "/etc/nginx/sites-enabled/${interface}" ]]; then
+        sudo ln -s "${cfg_dest}" "/etc/nginx/sites-enabled/"
+      fi
     fi
+
+    # Проверка конфигурации и перезагрузка NGINX
+    sudo nginx -t
+    sudo systemctl restart nginx.service
 
     if [[ -n ${SET_LISTEN_PORT} ]]; then
       ok_msg "${interface^} configured for port ${SET_LISTEN_PORT}!"
@@ -314,12 +382,9 @@ function set_nginx_cfg() {
       ok_msg "${interface^} configured for default port ${DEFAULT_PORT}!"
     fi
 
-    sudo systemctl restart nginx.service
-
     ok_msg "NGINX configuration for ${interface^} was set!"
   fi
 }
-
 ###
 # check if permissions of the users home directory
 # grant execution rights to group and other which is
