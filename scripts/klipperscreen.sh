@@ -56,8 +56,13 @@ function klipperscreen_setup() {
     exit 1
   fi
 
+  local system="debian"
+  if [[ $PKG_MANAGER == "dnf" ]]; then
+    system="redos"
+  fi
+
   status_msg "Installing KlipperScreen ..."
-  if "${KLIPPERSCREEN_DIR}"/scripts/KlipperScreen-install.sh; then
+  if "${KLIPPERSCREEN_DIR}"/scripts/KlipperScreen-install-"${system}".sh; then
     ok_msg "KlipperScreen successfully installed!"
   else
     print_error "KlipperScreen installation failed!"
