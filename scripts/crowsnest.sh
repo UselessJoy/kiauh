@@ -34,7 +34,7 @@ function multi_instance_message(){
 
 # Helper funcs
 function clone_crowsnest(){
-  $(command -v git) clone "${CROWSNEST_REPO}" -b master "${CROWSNEST_DIR}"
+  $(command -v git) clone "${CROWSNEST_REPO}" -b main "${CROWSNEST_DIR}"
 }
 
 function check_multi_instance(){
