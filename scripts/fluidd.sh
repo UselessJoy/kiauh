@@ -52,7 +52,7 @@ function install_fluidd() {
 
   ### check if another site already listens to port 80
   fluidd_port_check
-
+  sudo systemctl enable nginx.service
   ### download fluidd
   download_fluidd
 
