@@ -435,8 +435,6 @@ function install_moonraker_polkit() {
         wifi-sec.psk "GeliosPassword"
     nmcli connection reload
     nmcli connection down "Gelios" 2>/dev/null
-    ok_msg "added access point connection"
-    fi
   fi
 
   return
