@@ -421,13 +421,21 @@ function install_moonraker_polkit() {
     status_msg "Installing Moonraker policykit rules ..."
     "${HOME}"/moonraker/scripts/set-policykit-rules.sh
     ok_msg "Moonraker policykit rules installed!"
-    if nmcli connection show | grep Gelios ; then
-      status_msg "Connection already exist"
-    else
-      nmcli connection add type wifi ifname wlan0 con-name Gelios autoconnect no ssid Gelios
-      nmcli connection modify Gelios ipv4.method shared ipv4.addresses 10.42.1.10/24 ipv4.gateway 10.42.1.1
-      nmcli connection modify Gelios 802-11-wireless.mode ap 802-11-wireless.band bg 802-11-wireless.channel 6 wifi-sec.key-mgmt wpa-psk wifi-sec.psk GeliosPassword
-      ok_msg "added access point connection"
+    nmcli -f NAME,UUID connection show | grep -q "Gelios" && nmcli connection delete Gelios
+    nmcli connection add type wifi ifname wlan0 con-name "Gelios" autoconnect no ssid "Gelios"
+    nmcli connection modify "Gelios" -- \
+        ipv4.method shared \
+        ipv4.addresses 10.42.1.10/24 \
+        ipv4.gateway 10.42.1.1
+    nmcli connection modify "Gelios" \
+        802-11-wireless.mode ap \
+        802-11-wireless.band bg \
+        802-11-wireless.channel 6 \
+        wifi-sec.key-mgmt wpa-psk \
+        wifi-sec.psk "GeliosPassword"
+    nmcli connection reload
+    nmcli connection down "Gelios" 2>/dev/null
+    ok_msg "added access point connection"
     fi
   fi
 
