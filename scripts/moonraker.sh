@@ -416,7 +416,6 @@ function install_moonraker_polkit() {
     sudo systemctl daemon-reload
     ok_msg "Unit files reloaded!"
   fi
-
   ### execute moonrakers policykit-rules script only if rule files do not already exist
   if [[ -z ${legacy_file_exists} && ( -z ${file_exists} || -z ${usr_file_exists} ) ]]; then
     status_msg "Installing Moonraker policykit rules ..."
@@ -425,8 +424,8 @@ function install_moonraker_polkit() {
     if nmcli connection show | grep Gelios ; then
       status_msg "Connection already exist"
     else
-      sudo nmcli connection add type wifi ifname wlan0 con-name Gelios autoconnect no ssid Gelios
-      sudo nmcli connection modify Gelios 802-11-wireless.mode ap 802-11-wireless.band bg 802-11-wireless.channel 6 wifi-sec.key-mgmt wpa-psk wifi-sec.psk GeliosPassword
+      nmcli connection add type wifi ifname wlan0 con-name Gelios autoconnect no ssid Gelios
+      nmcli connection modify Gelios 802-11-wireless.mode ap 802-11-wireless.band bg 802-11-wireless.channel 6 wifi-sec.key-mgmt wpa-psk wifi-sec.psk GeliosPassword
       ok_msg "added access point connection"
     fi
   fi
