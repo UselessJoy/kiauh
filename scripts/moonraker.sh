@@ -426,6 +426,7 @@ function install_moonraker_polkit() {
     else
       nmcli connection add type wifi ifname wlan0 con-name Gelios autoconnect no ssid Gelios
       nmcli connection modify Gelios 802-11-wireless.mode ap 802-11-wireless.band bg 802-11-wireless.channel 6 wifi-sec.key-mgmt wpa-psk wifi-sec.psk GeliosPassword
+      nmcli connection modify Gelios ipv4.method shared ipv4.addresses 10.42.1.10/24 ipv4.gateway 10.42.1.1
       ok_msg "added access point connection"
     fi
   fi
