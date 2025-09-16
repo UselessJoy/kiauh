@@ -361,6 +361,9 @@ function create_required_folders() {
 }
 
 function update_system_package_lists() {
+  if [[ "$PKG_MANAGER" == "dnf" ]]; then
+      return
+  fi
   local cache_mtime update_age update_interval silent update_cmd
   
   if [[ $1 == '--silent' ]]; then silent="true"; fi
@@ -420,10 +423,12 @@ function check_system_updates() {
 function upgrade_system_packages() {
   status_msg "Upgrading System ..."
   update_system_package_lists
-  if sudo $PKG_MANAGER upgrade -y; then
-    print_confirm "Upgrade complete! Check the log above!\n ${yellow}KIAUH will not install any dist-upgrades or\n any packages which have been held back!${green}"
-  else
-    print_error "System upgrade failed! Please look for any errors printed above!"
+  if [[ $PKG_MANAGER == "apt" ]]; then
+    if sudo $PKG_MANAGER upgrade -y; then
+      print_confirm "Upgrade complete! Check the log above!\n ${yellow}KIAUH will not install any dist-upgrades or\n any packages which have been held back!${green}"
+    else
+      print_error "System upgrade failed! Please look for any errors printed above!"
+    fi
   fi
 }
 
