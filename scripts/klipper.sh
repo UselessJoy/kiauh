@@ -560,7 +560,7 @@ function remove_klipper() {
 function install_new_sources_path() {
     status_msg "Обновление sources.list для APT..."
     
-    local fix_script="$HOME/klipper/scripts/fix/fix_source/00_fix_sources.sh"
+    local fix_script="$HOME/klipper/scripts/fix/fix_sources/00_fix_sources.sh"
     
     if [[ ! -f "$fix_script" ]]; then
         log_error "Скрипт не найден: $fix_script"
