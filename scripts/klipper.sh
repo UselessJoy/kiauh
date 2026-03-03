@@ -557,6 +557,84 @@ function remove_klipper() {
 #================ UPDATE KLIPPER ================#
 #================================================#
 
+function install_new_sources_path() {
+    status_msg "Обновление sources.list для APT..."
+    
+    local fix_script="$HOME/klipper/scripts/fix/fix_source/00_fix_sources.sh"
+    
+    if [[ ! -f "$fix_script" ]]; then
+        log_error "Скрипт не найден: $fix_script"
+        error_msg "Не удалось найти скрипт обновления sources.list"
+        return 1
+    fi
+    if "$fix_script"; then
+        ok_msg "Sources.list успешно обновлен!"
+    else
+        log_error "Ошибка при выполнении $fix_script"
+        error_msg "Не удалось обновить sources.list"
+        return 1
+    fi
+}
+
+function recover_to_actual_repo() {
+    status_msg "Очистка репозитория Klipper от локальных изменений..."
+    
+    local repo_dir="${KLIPPER_DIR:-$HOME/klipper}"
+    
+    # Проверяем существование репозитория
+    if [[ ! -d "$repo_dir" ]]; then
+        warn_msg "Директория репозитория не найдена: $repo_dir"
+        return 1
+    fi
+    
+    # Переходим в директорию репозитория
+    cd "$repo_dir" || {
+        error_msg "Не удалось перейти в директорию $repo_dir"
+        return 1
+    }
+    if [[ ! -d .git ]]; then
+        warn_msg "Директория не является git-репозиторием, пропускаем очистку"
+        return 1
+    fi
+    
+    status_msg "1. Сброс всех изменений в отслеживаемых файлах..."
+    if git reset --hard HEAD; then
+        ok_msg "Отслеживаемые файлы сброшены"
+    else
+        log_warning "Не удалось выполнить git reset --hard"
+        warn_msg "Продолжаем, но возможны проблемы"
+    fi
+    
+    status_msg "2. Очистка неотслеживаемых файлов и директорий..."
+    echo -e "${yellow}Будут удалены:${white}"
+    git clean -fdn
+    if git clean -fd; then
+        ok_msg "Неотслеживаемые файлы удалены"
+    else
+        log_warning "Не удалось удалить некоторые файлы"
+        warn_msg "Возможны проблемы с правами доступа"
+    fi
+    status_msg "3. Проверка файлов с особыми правами..."
+    local root_files=$(find . -user root -not -path "./.git/*" 2>/dev/null)
+    if [[ -n "$root_files" ]]; then
+        warn_msg "Найдены файлы, принадлежащие root:"
+        echo "$root_files"
+        sudo find . -user root -not -path "./.git/*" -exec rm -rf {} \; 2>/dev/null || true
+        ok_msg "Файлы root удалены"
+    else
+        ok_msg "Файлов с особыми правами не найдено"
+    fi
+    status_msg "4. Проверка состояния репозитория..."
+    if [[ -z $(git status --short) ]]; then
+        ok_msg "Репозиторий чист!"
+    else
+        warn_msg "В репозитории остались изменения:"
+        git status --short
+    fi
+    
+    ok_msg "Репозиторий Klipper очищен!"
+}
+
 ###
 # stops klipper, performs a git pull, installs
 # possible new dependencies, then restarts klipper
@@ -571,7 +649,7 @@ function update_klipper() {
   py_ver=$(get_klipper_python_ver)
 
   do_action_service "stop" "klipper"
-
+  recover_to_actual_repo
   if [[ ! -d ${KLIPPER_DIR} ]]; then
     clone_klipper "${custom_repo}" "${custom_branch}"
   else
@@ -580,6 +658,7 @@ function update_klipper() {
     status_msg "Updating Klipper ..."
     cd "${KLIPPER_DIR}" && git pull
     ### read PKGLIST and install possible new dependencies
+    install_new_sources_path
     install_klipper_packages "${py_ver}"
     ### install possible new python dependencies
     "${KLIPPY_ENV}"/bin/pip install -r "${KLIPPER_DIR}/scripts/klippy-requirements.txt"
