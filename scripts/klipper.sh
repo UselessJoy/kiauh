@@ -440,14 +440,36 @@ function write_example_printer_cfg() {
 }
 
 function install_usb_automount() {
-  cd ~
-  git clone https://github.com/UselessJoy/udev-media-automount
-  cd udev-media-automount
-  sudo make install
-  sudo udevadm control --reload-rules
-  sudo udevadm trigger
-  cd ~
-  rm -rf udev-media-automount-master
+    status_msg "Installing USB automount..."
+    
+    local repo_url="https://github.com/UselessJoy/udev-media-automount"
+    local repo_dir="${HOME}/udev-media-automount"
+
+    if [[ -d "$repo_dir" ]]; then
+        status_msg "Removing existing directory..."
+        rm -rf "$repo_dir"
+        ok_msg "Old directory removed"
+    fi
+
+    if git clone "$repo_url" "$repo_dir" && \
+       cd "$repo_dir" && \
+       sudo make install; then
+        ok_msg "Installation successful"
+    else
+        error_msg "Installation failed"
+        cd "$HOME"
+        return 1
+    fi
+    
+    # Обновляем udev
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger
+    
+    # Возвращаемся и удаляем исходники
+    cd "$HOME"
+    rm -rf "$repo_dir"
+    
+    ok_msg "USB automount installed and configured!"
 }
 
 #================================================#
@@ -507,7 +529,7 @@ function remove_klipper_dir() {
   [[ ! -d ${KLIPPER_DIR} ]] && return
 
   status_msg "Removing Klipper directory ..."
-  rm -rf "${KLIPPER_DIR}"
+  sudo rm -rf "${KLIPPER_DIR}"
   ok_msg "Directory removed!"
 }
 
