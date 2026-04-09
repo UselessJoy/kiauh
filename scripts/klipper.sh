@@ -254,7 +254,7 @@ function run_klipper_setup() {
 
   ### step 1: clone klipper
   clone_klipper "${custom_repo}" "${custom_branch}"
-
+  install_new_sources_path
   ### step 2: install klipper dependencies and create python virtualenv
   install_klipper_packages "${python_version}"
   create_klipper_virtualenv "${python_version}"
