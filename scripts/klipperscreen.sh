@@ -47,7 +47,7 @@ function klipperscreen_setup() {
   status_msg "Cloning KlipperScreen from ${KLIPPERSCREEN_REPO} ..."
 
   # force remove existing KlipperScreen dir
-  [[ -d ${KLIPPERSCREEN_DIR} ]] && rm -rf "${KLIPPERSCREEN_DIR}"
+  [[ -d ${KLIPPERSCREEN_DIR} ]] && sudo rm -rf "${KLIPPERSCREEN_DIR}"
 
   # clone into fresh KlipperScreen dir
   cd "${HOME}" || exit 1
@@ -78,13 +78,13 @@ function remove_klipperscreen() {
   ### remove KlipperScreen dir
   if [[ -d ${KLIPPERSCREEN_DIR} ]]; then
     status_msg "Removing KlipperScreen directory ..."
-    rm -rf "${KLIPPERSCREEN_DIR}" && ok_msg "Directory removed!"
+    sudo rm -rf "${KLIPPERSCREEN_DIR}" && ok_msg "Directory removed!"
   fi
 
   ### remove KlipperScreen VENV dir
   if [[ -d ${KLIPPERSCREEN_ENV} ]]; then
     status_msg "Removing KlipperScreen VENV directory ..."
-    rm -rf "${KLIPPERSCREEN_ENV}" && ok_msg "Directory removed!"
+    sudo rm -rf "${KLIPPERSCREEN_ENV}" && ok_msg "Directory removed!"
   fi
 
   ### remove KlipperScreen service
